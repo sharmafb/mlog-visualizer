@@ -57,7 +57,7 @@ function hover(event, position) {
   const viewport = byId("timeline-viewport");
   const width = viewport.clientWidth;
   tooltip.style.left = `${viewport.scrollLeft + Math.max(10, Math.min(position.x - viewport.scrollLeft + 14, width - Math.min(300, tooltip.offsetWidth) - 12))}px`;
-  tooltip.style.top = `${Math.max(8, Math.min(position.y + 12, byId("timeline-viewport").clientHeight - tooltip.offsetHeight - 10))}px`;
+  tooltip.style.top = `${viewport.scrollTop + Math.max(8, Math.min(position.y - viewport.scrollTop + 12, viewport.clientHeight - tooltip.offsetHeight - 10))}px`;
 }
 
 function select(event) {
@@ -305,7 +305,7 @@ function receive({ data }) {
     allTransfers.reduce((sum, event) => sum + event.bytes, 0),
   );
   byId("timeline-subtitle").textContent =
-    "One column per track · matching send and receive observations share a box";
+    "One vertical stack per track · crowded timestamps are spaced for readability";
   byId("trace-filter").replaceChildren(new Option("All traces", "all"));
   for (let i = 0; i < parsed.metadata.traceCount; i++) {
     const endpoints = [

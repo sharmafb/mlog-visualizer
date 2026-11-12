@@ -66,9 +66,11 @@ The vertical timeline has one column per track. Matching send and receive
 observations share one box; both original records remain available in the
 details panel. Repeated observations from the same endpoint stay separate.
 
-Labels are measured and clipped inside their boxes. Events whose time positions
-would overlap use side-by-side slots within the same track, preserving the
-linear time axis. Scroll horizontally or Shift+scroll to see wide columns.
+Labels are measured and clipped inside their boxes. Every track is a single
+vertical stack with fixed box positions. A tall timeline follows the earlier
+viewer's time-scaled layout; crowded timestamps receive extra vertical spacing
+so boxes do not overlap. The time labels and event details retain the recorded
+timestamps. Scroll vertically to explore the session; Ctrl/Cmd+scroll zooms.
 
 This implementation follows the interaction model of Moxygen's MoQ timeline
 viewer: track columns, track filters, direction arrows, and event details.

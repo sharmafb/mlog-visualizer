@@ -8,6 +8,8 @@
     const a = render.boxes[i];
     for (let j = i + 1; j < render.boxes.length; j++) {
       const b = render.boxes[j];
+      if (a.track === b.track && (a.x !== b.x || a.width !== b.width))
+        failures.push("Track is not a single vertical stack: " + a.track);
       if (
         a.x < b.x + b.width &&
         a.x + a.width > b.x &&
@@ -33,6 +35,11 @@
     failures.push("Duplicate track column");
   if (canvas.width > (canvas.parentElement.clientWidth + 1) * devicePixelRatio)
     failures.push("Canvas is not virtualized");
+  if (
+    canvas.height >
+    (canvas.parentElement.clientHeight + 1) * devicePixelRatio
+  )
+    failures.push("Canvas height is not virtualized");
   if (failures.length) throw new Error(failures.join("\n"));
   return {
     viewport: innerWidth + "x" + innerHeight,

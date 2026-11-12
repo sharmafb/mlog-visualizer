@@ -14,6 +14,8 @@ import {
   fitLabel,
   labelPosition,
   layoutTimeline,
+  timeToY,
+  yToTime,
 } from "../src/timeline-layout.js";
 
 const source = parseLog(
@@ -144,21 +146,33 @@ for (const width of [390, 768, 1200, 2038]) {
           source.tracks.map((track) => track.id),
         );
         assertSeparate(layout.boxes);
+        assert.equal(layout.boxes.length, transfers.length);
+        assert.ok(layout.columns.every((column) => column.slots === 1));
         for (const box of layout.boxes) {
           assert.ok(box.height >= 20);
           assert.ok(box.width >= 64);
-          const expected =
-            HEADER_HEIGHT +
-            ((box.event.relativeMs + 10) * layout.plotHeight) /
-              (source.durationMs / zoom);
-          assert.ok(Math.abs(box.y + box.height / 2 - expected) < 1e-8);
+          assert.ok(
+            layout.anchors.some(
+              (anchor) =>
+                anchor.time === box.event.relativeMs &&
+                Math.abs(anchor.y - box.y - box.height / 2) < 1e-8,
+            ),
+          );
+          const column = layout.columns.find(
+            (column) => column.id === box.event.trackKey,
+          );
+          assert.ok(
+            column.boxes.every(
+              (other) => other.x === box.x && other.width === box.width,
+            ),
+          );
         }
       }
     });
   }
 }
 
-test("events at exactly the same timestamp get distinct slots", () => {
+test("events at exactly the same timestamp stack vertically in one column", () => {
   const original = transfers.find((event) => event.category === "object");
   const events = Array.from({ length: 200 }, (_, index) => ({
     ...original,
@@ -177,9 +191,55 @@ test("events at exactly the same timestamp get distinct slots", () => {
   });
   assert.equal(layout.boxes.length, 200);
   assert.equal(layout.columns.length, 1);
-  assert.equal(layout.columns[0].slots, 200);
+  assert.equal(layout.columns[0].slots, 1);
   assertSeparate(layout.boxes);
-  assert.ok(layout.width > 10000);
+  assert.equal(layout.width, 600);
+  assert.ok(layout.height > 4000);
+  assert.equal(new Set(layout.boxes.map((box) => box.x)).size, 1);
+  assert.ok(layout.anchors.every((anchor) => anchor.time === 5));
+});
+
+test("time labels follow the expanded vertical positions", () => {
+  const layout = layoutTimeline({
+    events: transfers,
+    tracks: source.tracks,
+    width: 1200,
+    height: 560,
+    min: 0,
+    span: source.durationMs,
+    sizes: true,
+  });
+  for (const anchor of layout.anchors) {
+    assert.ok(Math.abs(yToTime(layout, anchor.y) - anchor.time) < 1e-8);
+  }
+  for (const time of new Set(layout.anchors.map((anchor) => anchor.time))) {
+    assert.ok(Math.abs(yToTime(layout, timeToY(layout, time)) - time) < 1e-8);
+  }
+  assert.ok(layout.height >= 2000);
+});
+
+test("same-time events in different tracks retain alignment", () => {
+  const original = transfers[0];
+  const events = [
+    { ...original, id: "a0", trackKey: "a", relativeMs: 0, bytes: 40000 },
+    { ...original, id: "a1", trackKey: "a", relativeMs: 1 },
+    { ...original, id: "b1", trackKey: "b", relativeMs: 1 },
+  ];
+  const layout = layoutTimeline({
+    events,
+    tracks: [
+      { id: "a", name: "A" },
+      { id: "b", name: "B" },
+    ],
+    width: 800,
+    height: 560,
+    min: 0,
+    span: 10,
+    sizes: true,
+  });
+  const same = layout.boxes.filter((box) => box.event.relativeMs === 1);
+  assert.equal(same[0].y + same[0].height / 2, same[1].y + same[1].height / 2);
+  assertSeparate(layout.boxes);
 });
 
 test("label fitting uses measured widths instead of character counts", () => {

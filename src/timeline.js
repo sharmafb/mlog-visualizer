@@ -8,6 +8,8 @@ import {
   fitLabel,
   labelPosition,
   layoutTimeline,
+  timeToY,
+  yToTime,
 } from "./timeline-layout.js";
 
 export class Timeline {
@@ -28,6 +30,7 @@ export class Timeline {
     this.viewport = canvas.parentElement;
     this.spacer = document.getElementById("timeline-spacer");
     this.pendingFocus = null;
+    this.pendingZoom = null;
     this.observer = new ResizeObserver(() => this.schedule());
     this.observer.observe(canvas.parentElement);
     this.viewport.addEventListener("scroll", () => this.schedule());
@@ -42,10 +45,12 @@ export class Timeline {
             : event.deltaX;
           return;
         }
-        this.zoom(
-          Math.exp(-Math.max(-100, Math.min(100, event.deltaY)) * 0.004),
-          this.position(event).y,
-        );
+        if (event.ctrlKey || event.metaKey) {
+          this.zoom(
+            Math.exp(-Math.max(-100, Math.min(100, event.deltaY)) * 0.004),
+            this.position(event).y - this.viewport.scrollTop,
+          );
+        } else this.viewport.scrollTop += event.deltaY;
       },
       { passive: false },
     );
@@ -60,7 +65,7 @@ export class Timeline {
         this.drag.moved ||= Math.abs(event.clientY - this.drag.origin) > 3;
         this.drag.y = event.clientY;
         if (this.drag.moved) {
-          this.min -= (delta * this.span) / this.plotHeight();
+          this.viewport.scrollTop -= delta;
           canvas.classList.add("dragging");
           this.hover(null);
           this.schedule();
@@ -92,7 +97,9 @@ export class Timeline {
       else if (event.key === "-") this.zoom(1 / 1.5);
       else if (event.key === "Home") this.fit();
       else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        this.min += this.span * (event.key === "ArrowDown" ? 0.15 : -0.15);
+        this.viewport.scrollTop +=
+          this.viewport.clientHeight *
+          (event.key === "ArrowDown" ? 0.15 : -0.15);
         this.schedule();
       } else return;
       event.preventDefault();
@@ -115,30 +122,32 @@ export class Timeline {
     const first = this.events[0]?.relativeMs || 0;
     const last = this.events.at(-1)?.relativeMs || first;
     const span = Math.max(last - first, 0.5);
-    this.min = first - span * 0.04;
+    this.min = first;
     this.span = span * 1.1;
+    this.pendingZoom = null;
+    this.viewport.scrollTop = 0;
+    this.viewport.scrollLeft = 0;
     this.schedule();
   }
 
   zoom(factor, y) {
-    const anchor =
-      y === undefined
-        ? 0.5
-        : Math.max(0, Math.min(1, (y - 64) / this.plotHeight()));
-    const nextSpan = Math.max(1e-6, Math.min(1e15, this.span / factor));
-    this.min += (this.span - nextSpan) * anchor;
-    this.span = nextSpan;
+    const screenY = y ?? (HEADER_HEIGHT + this.viewport.clientHeight) / 2;
+    if (this.layout) {
+      const worldY = screenY + this.viewport.scrollTop;
+      const time = yToTime(this.layout, worldY);
+      this.pendingZoom = {
+        time,
+        screenY,
+        offset: worldY - timeToY(this.layout, time),
+      };
+    }
+    this.span = Math.max(1e-6, Math.min(1e15, this.span / factor));
     this.schedule();
   }
 
   focus(event) {
     this.selected = event?.id || null;
     this.pendingFocus = event?.id || null;
-    if (
-      event &&
-      (event.relativeMs < this.min || event.relativeMs > this.min + this.span)
-    )
-      this.min = event.relativeMs - this.span / 2;
     this.schedule();
   }
 
@@ -146,13 +155,13 @@ export class Timeline {
     const rectangle = this.canvas.getBoundingClientRect();
     return {
       x: event.clientX - rectangle.left + this.viewport.scrollLeft,
-      y: event.clientY - rectangle.top,
+      y: event.clientY - rectangle.top + this.viewport.scrollTop,
     };
   }
 
   hit(position) {
     if (
-      position.y < HEADER_HEIGHT ||
+      position.y - this.viewport.scrollTop < HEADER_HEIGHT ||
       position.x - this.viewport.scrollLeft < AXIS_WIDTH
     )
       return null;
@@ -191,7 +200,16 @@ export class Timeline {
     });
     this.layout = layout;
     this.spacer.style.width = `${layout.width}px`;
-    this.spacer.style.height = `${height}px`;
+    this.spacer.style.height = `${layout.height}px`;
+    if (this.pendingZoom) {
+      this.viewport.scrollTop = Math.max(
+        0,
+        timeToY(layout, this.pendingZoom.time) +
+          this.pendingZoom.offset -
+          this.pendingZoom.screenY,
+      );
+      this.pendingZoom = null;
+    }
     if (this.pendingFocus) {
       const box = layout.boxes.find(
         (box) => box.event.id === this.pendingFocus,
@@ -203,14 +221,23 @@ export class Timeline {
       ) {
         this.viewport.scrollLeft = Math.max(0, box.x - AXIS_WIDTH - 12);
       }
+      if (
+        box &&
+        (box.y < this.viewport.scrollTop + HEADER_HEIGHT ||
+          box.y + box.height > this.viewport.scrollTop + height)
+      ) {
+        this.viewport.scrollTop = Math.max(0, box.y - HEADER_HEIGHT - 12);
+      }
       this.pendingFocus = null;
     }
     const scrollLeft = this.viewport.scrollLeft;
+    const scrollTop = this.viewport.scrollTop;
     const width = layout.width;
     const dpr = window.devicePixelRatio || 1;
     this.canvas.style.width = `${viewportWidth}px`;
     this.canvas.style.height = `${height}px`;
     this.canvas.style.left = `${scrollLeft}px`;
+    this.canvas.style.top = `${scrollTop}px`;
     if (
       this.canvas.width !== Math.round(viewportWidth * dpr) ||
       this.canvas.height !== Math.round(height * dpr)
@@ -219,23 +246,23 @@ export class Timeline {
       this.canvas.height = Math.round(height * dpr);
     }
     const ctx = this.context;
-    ctx.setTransform(dpr, 0, 0, dpr, -scrollLeft * dpr, 0);
-    ctx.clearRect(scrollLeft, 0, viewportWidth, height);
+    ctx.setTransform(dpr, 0, 0, dpr, -scrollLeft * dpr, -scrollTop * dpr);
+    ctx.clearRect(scrollLeft, scrollTop, viewportWidth, height);
     ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
     ctx.lineWidth = 1;
     ctx.fillStyle = "#fcfcfe";
-    ctx.fillRect(0, 0, width, HEADER_HEIGHT);
+    ctx.fillRect(scrollLeft, scrollTop, viewportWidth, HEADER_HEIGHT);
     ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillStyle = "#9297a6";
     layout.columns.forEach((column, index) => {
       ctx.strokeStyle = "#e2e3ec";
       ctx.beginPath();
-      ctx.moveTo(column.x, 0);
-      ctx.lineTo(column.x, height);
+      ctx.moveTo(column.x, scrollTop);
+      ctx.lineTo(column.x, scrollTop + height);
       ctx.stroke();
       ctx.fillStyle = TRACK_COLORS[index % TRACK_COLORS.length];
-      ctx.fillRect(column.x + 16, 23, 5, 5);
+      ctx.fillRect(column.x + 16, scrollTop + 23, 5, 5);
       ctx.fillStyle = "#55576d";
       ctx.font = "600 12px -apple-system, BlinkMacSystemFont, sans-serif";
       const name =
@@ -249,7 +276,7 @@ export class Timeline {
           (text) => ctx.measureText(text).width,
         ),
         column.x + 28,
-        30,
+        scrollTop + 30,
       );
       ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
       ctx.fillStyle = "#9290a1";
@@ -269,42 +296,23 @@ export class Timeline {
           (text) => ctx.measureText(text).width,
         ),
         column.x + 16,
-        49,
+        scrollTop + 49,
       );
-      for (let slot = 1; slot < column.slots; slot++) {
-        const x = column.x + (column.width * slot) / column.slots;
-        ctx.setLineDash([3, 5]);
-        ctx.strokeStyle = "#f0f0f6";
-        ctx.beginPath();
-        ctx.moveTo(x, HEADER_HEIGHT);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
     });
     ctx.strokeStyle = "#e9eaf1";
     ctx.beginPath();
-    ctx.moveTo(0, HEADER_HEIGHT);
-    ctx.lineTo(width, HEADER_HEIGHT);
+    ctx.moveTo(scrollLeft, scrollTop + HEADER_HEIGHT);
+    ctx.lineTo(scrollLeft + viewportWidth, scrollTop + HEADER_HEIGHT);
     ctx.stroke();
-    const targetStep = this.span / (layout.plotHeight / 65);
-    const power = 10 ** Math.floor(Math.log10(targetStep));
-    const ratio = targetStep / power;
-    const step =
-      (ratio <= 1 ? 1 : ratio <= 2 ? 2 : ratio <= 5 ? 5 : 10) * power;
-    ctx.font = "10px ui-monospace, SFMono-Regular, monospace";
-    for (
-      let tick = Math.ceil(this.min / step) * step;
-      tick < this.min + this.span;
-      tick += step
-    ) {
-      const y =
-        HEADER_HEIGHT + ((tick - this.min) * layout.plotHeight) / this.span;
-      ctx.fillStyle = "#9297a4";
+    const visibleAnchors = layout.anchors.filter(
+      (anchor) =>
+        anchor.y >= scrollTop + HEADER_HEIGHT && anchor.y <= scrollTop + height,
+    );
+    for (const anchor of visibleAnchors) {
       ctx.strokeStyle = "#f0f1f6";
       ctx.beginPath();
-      ctx.moveTo(AXIS_WIDTH, y);
-      ctx.lineTo(width, y);
+      ctx.moveTo(scrollLeft + AXIS_WIDTH, anchor.y);
+      ctx.lineTo(scrollLeft + viewportWidth, anchor.y);
       ctx.stroke();
     }
     this.hits = [];
@@ -313,7 +321,7 @@ export class Timeline {
     ctx.beginPath();
     ctx.rect(
       scrollLeft + AXIS_WIDTH,
-      HEADER_HEIGHT,
+      scrollTop + HEADER_HEIGHT,
       viewportWidth - AXIS_WIDTH,
       height - HEADER_HEIGHT,
     );
@@ -322,7 +330,9 @@ export class Timeline {
       const event = box.event;
       if (
         box.x + box.width < scrollLeft + AXIS_WIDTH ||
-        box.x > scrollLeft + viewportWidth
+        box.x > scrollLeft + viewportWidth ||
+        box.y + box.height < scrollTop + HEADER_HEIGHT ||
+        box.y > scrollTop + height
       )
         continue;
       const color = COLORS[event.category];
@@ -410,39 +420,41 @@ export class Timeline {
     }
     ctx.restore();
     ctx.fillStyle = "#fcfcfe";
-    ctx.fillRect(scrollLeft, 0, AXIS_WIDTH, HEADER_HEIGHT);
+    ctx.fillRect(scrollLeft, scrollTop, AXIS_WIDTH, HEADER_HEIGHT);
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(scrollLeft, HEADER_HEIGHT, AXIS_WIDTH, height - HEADER_HEIGHT);
+    ctx.fillRect(
+      scrollLeft,
+      scrollTop + HEADER_HEIGHT,
+      AXIS_WIDTH,
+      height - HEADER_HEIGHT,
+    );
     ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillStyle = "#9297a6";
-    ctx.fillText("TIME (ms)", scrollLeft + 12, 29);
+    ctx.fillText("TIME (ms)", scrollLeft + 12, scrollTop + 29);
     ctx.font = "10px ui-monospace, SFMono-Regular, monospace";
-    for (
-      let tick = Math.ceil(this.min / step) * step;
-      tick < this.min + this.span;
-      tick += step
-    ) {
-      const y =
-        HEADER_HEIGHT + ((tick - this.min) * layout.plotHeight) / this.span;
+    let lastTimeLabel = -Infinity;
+    for (const anchor of visibleAnchors) {
+      if (anchor.y - lastTimeLabel < 38) continue;
       ctx.fillText(
-        Math.abs(tick) < step * 1e-5
-          ? "0"
-          : Number(tick.toPrecision(7)).toLocaleString("en-US", {
-              maximumFractionDigits: 6,
-            }),
+        Number(anchor.time.toPrecision(7)).toLocaleString("en-US", {
+          maximumFractionDigits: 6,
+        }),
         scrollLeft + 12,
-        y + 3,
+        anchor.y + 3,
       );
+      lastTimeLabel = anchor.y;
     }
     ctx.strokeStyle = "#e2e3ec";
     ctx.beginPath();
-    ctx.moveTo(scrollLeft + AXIS_WIDTH, 0);
-    ctx.lineTo(scrollLeft + AXIS_WIDTH, height);
+    ctx.moveTo(scrollLeft + AXIS_WIDTH, scrollTop);
+    ctx.lineTo(scrollLeft + AXIS_WIDTH, scrollTop + height);
     ctx.stroke();
     this.canvas.__mlogRender = {
       width: layout.width,
-      height,
+      height: layout.height,
+      viewportHeight: height,
       scrollLeft,
+      scrollTop,
       columns: layout.columns.map(({ id, name, x, width, slots }) => ({
         id,
         name,
@@ -462,6 +474,7 @@ export class Timeline {
     };
     this.canvas.dataset.renderedEvents = String(this.hits.length);
     this.canvas.dataset.columns = String(layout.columns.length);
+    this.canvas.dataset.contentHeight = String(layout.height);
     this.canvas.dataset.viewMin = String(this.min);
     this.canvas.dataset.viewSpan = String(this.span);
     this.canvas.dataset.lastRender = formatMs(this.min);

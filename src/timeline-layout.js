@@ -2,9 +2,9 @@
 export const AXIS_WIDTH = 85;
 export const HEADER_HEIGHT = 64;
 export const TEXT_PADDING = 6;
-const COLUMN_PADDING = 8;
-const BOX_WIDTH = 64;
-const BOX_GAP = 5;
+const COLUMN_PADDING = 12;
+const BOX_GAP = 6;
+const BASE_PLOT_HEIGHT = 2000;
 
 export function eventHeight(event, sizes) {
   return sizes && event.bytes
@@ -12,8 +12,8 @@ export function eventHeight(event, sizes) {
     : 20;
 }
 
-// Interval partitioning keeps timestamps on a linear axis. Collisions receive
-// separate horizontal slots in the same track instead of moving time positions.
+// Track positions are fixed. A shared time mapping expands crowded intervals
+// vertically, keeping equal timestamps aligned across tracks and labels honest.
 export function layoutTimeline({
   events,
   tracks,
@@ -23,53 +23,128 @@ export function layoutTimeline({
   span,
   sizes,
 }) {
-  const plotHeight = Math.max(1, height - HEADER_HEIGHT - 14);
-  const lanes = tracks.map((track) => ({
+  const scale = BASE_PLOT_HEIGHT / span;
+  const columns = tracks.map((track) => ({
     ...track,
     boxes: [],
-    ends: [],
     slots: 1,
+    bottom: HEADER_HEIGHT,
   }));
-  const laneById = new Map(lanes.map((lane) => [lane.id, lane]));
+  const laneById = new Map(columns.map((column) => [column.id, column]));
+  const contentWidth = Math.max(width, AXIS_WIDTH + columns.length * 190 + 12);
+  const columnWidth = columns.length
+    ? (contentWidth - AXIS_WIDTH - 12) / columns.length
+    : 0;
+  columns.forEach((column, index) => {
+    column.x = AXIS_WIDTH + index * columnWidth;
+    column.width = columnWidth;
+  });
+  const byTime = new Map();
   for (const event of events) {
-    const lane = laneById.get(event.trackKey);
-    if (!lane) continue;
-    const boxHeight = eventHeight(event, sizes);
-    const center =
-      HEADER_HEIGHT + ((event.relativeMs - min) * plotHeight) / span;
-    const top = center - boxHeight / 2;
-    if (top + boxHeight < HEADER_HEIGHT || top > height) continue;
-    let slot = lane.ends.findIndex((end) => end + BOX_GAP <= top);
-    if (slot < 0) slot = lane.ends.length;
-    lane.ends[slot] = top + boxHeight;
-    lane.slots = Math.max(lane.slots, slot + 1);
-    lane.boxes.push({ event, slot, y: top, height: boxHeight });
+    if (!laneById.has(event.trackKey)) continue;
+    const entries = byTime.get(event.relativeMs) || [];
+    entries.push(event);
+    byTime.set(event.relativeMs, entries);
   }
-  for (const lane of lanes)
-    lane.width = Math.max(
-      190,
-      lane.slots * BOX_WIDTH + (lane.slots - 1) * BOX_GAP + 2 * COLUMN_PADDING,
-    );
-  const minimumWidth =
-    AXIS_WIDTH + lanes.reduce((sum, lane) => sum + lane.width, 0) + 12;
-  const contentWidth = Math.max(width, minimumWidth);
-  const extra = lanes.length ? (contentWidth - minimumWidth) / lanes.length : 0;
-  let left = AXIS_WIDTH;
-  const boxes = [];
-  for (const lane of lanes) {
-    lane.x = left;
-    lane.width += extra;
-    const slotWidth =
-      (lane.width - 2 * COLUMN_PADDING - (lane.slots - 1) * BOX_GAP) /
-      lane.slots;
-    for (const box of lane.boxes) {
-      box.x = left + COLUMN_PADDING + box.slot * (slotWidth + BOX_GAP);
-      box.width = slotWidth;
-      boxes.push(box);
+  const anchors = [],
+    boxes = [];
+  let previousTime = min,
+    previousY = HEADER_HEIGHT + 24;
+  for (const [time, entries] of [...byTime].sort((a, b) => a[0] - b[0])) {
+    const lanes = new Map();
+    for (const event of entries) {
+      const list = lanes.get(event.trackKey) || [];
+      list.push(event);
+      lanes.set(event.trackKey, list);
     }
-    left += lane.width;
+    const rows = Math.max(...[...lanes.values()].map((list) => list.length));
+    let desired = previousY + (time - previousTime) * scale;
+    for (let row = 0; row < rows; row++) {
+      const items = [...lanes].flatMap(([id, list]) =>
+        list[row] ? [{ column: laneById.get(id), event: list[row] }] : [],
+      );
+      const center = Math.max(
+        desired,
+        ...items.map(
+          ({ column, event }) =>
+            column.bottom + BOX_GAP + eventHeight(event, sizes) / 2,
+        ),
+      );
+      for (const { column, event } of items) {
+        const boxHeight = eventHeight(event, sizes);
+        const box = {
+          event,
+          slot: 0,
+          x: column.x + COLUMN_PADDING,
+          y: center - boxHeight / 2,
+          width: column.width - 2 * COLUMN_PADDING,
+          height: boxHeight,
+        };
+        column.boxes.push(box);
+        column.bottom = box.y + box.height;
+        boxes.push(box);
+      }
+      anchors.push({ time, y: center });
+      previousY = center;
+      desired = center;
+    }
+    previousTime = time;
   }
-  return { width: contentWidth, height, plotHeight, columns: lanes, boxes };
+  const contentHeight = Math.max(
+    height,
+    ...columns.map((column) => column.bottom + 24),
+  );
+  return {
+    width: contentWidth,
+    height: contentHeight,
+    viewportHeight: height,
+    plotHeight: BASE_PLOT_HEIGHT,
+    scale,
+    columns,
+    boxes,
+    anchors,
+  };
+}
+
+export function timeToY(layout, time) {
+  const anchors = layout.anchors;
+  if (!anchors.length) return HEADER_HEIGHT + 24;
+  let low = 0,
+    high = anchors.length;
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (anchors[middle].time < time) low = middle + 1;
+    else high = middle;
+  }
+  if (low === 0) return anchors[0].y + (time - anchors[0].time) * layout.scale;
+  if (low === anchors.length) {
+    const last = anchors.at(-1);
+    return last.y + (time - last.time) * layout.scale;
+  }
+  if (anchors[low].time === time) return anchors[low].y;
+  const a = anchors[low - 1],
+    b = anchors[low];
+  return a.y + ((time - a.time) * (b.y - a.y)) / (b.time - a.time);
+}
+
+export function yToTime(layout, y) {
+  const anchors = layout.anchors;
+  if (!anchors.length) return 0;
+  let low = 0,
+    high = anchors.length;
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (anchors[middle].y < y) low = middle + 1;
+    else high = middle;
+  }
+  if (low === 0) return anchors[0].time + (y - anchors[0].y) / layout.scale;
+  if (low === anchors.length) {
+    const last = anchors.at(-1);
+    return last.time + (y - last.y) / layout.scale;
+  }
+  const a = anchors[low - 1],
+    b = anchors[low];
+  return a.time + ((y - a.y) * (b.time - a.time)) / (b.y - a.y);
 }
 
 export function fitLabel(text, width, measure) {
