@@ -345,7 +345,7 @@ test("zero payload lengths and zero IDs retain their meaning", () => {
       ]),
     ]),
   ).events[0];
-  assert.equal(objectLabel(parsed), "0 / 0");
+  assert.equal(objectLabel(parsed), "group = 0, object = 0");
   assert.equal(parsed.bytes, 0);
   assert.equal(formatBytes(0), "0 B");
   assert.equal(formatMs(12.345), "12.345 ms");

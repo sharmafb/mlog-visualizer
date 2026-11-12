@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Aman Sharma. MIT licensed.
-import { COLORS, TRACK_COLORS, formatMs } from "./format.js";
+import { COLORS, TRACK_COLORS, formatMs, objectLabel } from "./format.js";
 import { transferDirection } from "./transfer-events.js";
 import {
   AXIS_WIDTH,
@@ -350,12 +350,7 @@ export class Timeline {
         ctx.strokeRect(box.x, box.y, box.width, box.height);
         ctx.lineWidth = 1;
       }
-      const id =
-        event.objectId !== null
-          ? `o${event.objectId}`
-          : event.objectDelta !== null
-            ? `Δ${event.objectDelta}`
-            : null;
+      const hasObject = event.objectId !== null || event.objectDelta !== null;
       const rangeEnd =
         event.data.end_of_timed_out_range ||
         event.data.end_of_unknown_range ||
@@ -364,9 +359,9 @@ export class Timeline {
         event.category === "control" ||
         rangeEnd ||
         !this.options.ids ||
-        id === null
+        !hasObject
           ? event.label
-          : `${event.groupId === null ? "" : `g${event.groupId}/`}${id}`;
+          : objectLabel(event);
       ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";
       const prefix =
         event.category === "control" || event.category === "transport"

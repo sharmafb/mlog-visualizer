@@ -55,7 +55,9 @@ export function objectLabel(event) {
       : event.objectDelta !== null
         ? `Δ${event.objectDelta}`
         : "—";
-  return group === "—" && object === "—" ? "—" : `${group} / ${object}`;
+  return group === "—" && object === "—"
+    ? "—"
+    : `group = ${group}, object = ${object}`;
 }
 export function directionArrow(event) {
   if (event.endpoint === "unknown") return "·";

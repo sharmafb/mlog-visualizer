@@ -52,11 +52,55 @@ function hover(event, position) {
   const tooltip = byId("tooltip");
   tooltip.hidden = !event;
   if (!event) return;
-  tooltip.textContent = `${event.label}\n${formatMs(event.relativeMs)} · ${transferDirection(event)}\n${event.trackName || "Connection"}\n${event.observations.length} logged ${event.observations.length === 1 ? "observation" : "observations"}\nGroup / object: ${objectLabel(event)}${event.bytes ? `\n${formatBytes(event.bytes)}` : ""}`;
+  tooltip.textContent = `${event.label}\n${formatMs(event.relativeMs)} · ${transferDirection(event)}\n${event.trackName || "Connection"}\n${event.observations.length} logged ${event.observations.length === 1 ? "observation" : "observations"}\n${objectLabel(event)}${event.bytes ? `\n${formatBytes(event.bytes)}` : ""}`;
   const viewport = byId("timeline-viewport");
   const width = viewport.clientWidth;
   tooltip.style.left = `${viewport.scrollLeft + Math.max(10, Math.min(position.x - viewport.scrollLeft + 14, width - Math.min(300, tooltip.offsetWidth) - 12))}px`;
   tooltip.style.top = `${viewport.scrollTop + Math.max(8, Math.min(position.y - viewport.scrollTop + 12, viewport.clientHeight - tooltip.offsetHeight - 10))}px`;
+}
+
+function renderSetupOptions(event) {
+  const section = byId("detail-setup");
+  const fields = byId("detail-setup-options");
+  section.hidden =
+    event.category !== "control" || event.messageType !== "SETUP";
+  fields.replaceChildren();
+  if (section.hidden) return;
+
+  const options = [event, ...event.observations]
+    .map(
+      (observation) =>
+        (observation.data.message || observation.data).setup_options,
+    )
+    .find(Array.isArray);
+  fields.hidden = !Array.isArray(options) || options.length === 0;
+  const empty = byId("detail-setup-empty");
+  empty.hidden = !fields.hidden;
+  empty.textContent = Array.isArray(options)
+    ? "No setup options."
+    : "Setup options were not logged.";
+  if (fields.hidden) return;
+
+  for (const option of options) {
+    const map =
+      option && typeof option === "object" && !Array.isArray(option)
+        ? option
+        : { value: option };
+    const entries = Object.entries(map).filter(([key]) => key !== "name");
+    const value =
+      entries.length === 0
+        ? "Present"
+        : entries.length === 1 && entries[0][0] === "value"
+          ? entries[0][1]
+          : Object.fromEntries(entries);
+    fields.append(
+      textElement("dt", String(map.name ?? "Unknown option")),
+      textElement(
+        "dd",
+        typeof value === "string" ? value : JSON.stringify(value, null, 2),
+      ),
+    );
+  }
 }
 
 function select(event) {
@@ -113,6 +157,7 @@ function select(event) {
       textElement("dd", value),
     );
   }
+  renderSetupOptions(event);
   byId("detail-json").textContent = JSON.stringify(
     rawObservations(event),
     null,

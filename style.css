@@ -737,6 +737,18 @@ dd {
   font-size: 10px;
   line-height: 1.6;
 }
+.setup-options h4 {
+  margin: 20px 0 12px;
+}
+#detail-setup-options {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+#detail-setup-options dt {
+  overflow-wrap: anywhere;
+}
+#detail-setup-options dd {
+  white-space: pre-wrap;
+}
 .raw-heading {
   display: flex;
   align-items: center;
