@@ -1,9 +1,11 @@
 // Copyright (c) 2026 Aman Sharma. MIT licensed.
 import { COLORS, TRACK_COLORS, formatMs, objectLabel } from "./format.js";
 import { transferDirection } from "./transfer-events.js";
+import { requestConnector } from "./request-links.js";
 import {
   AXIS_WIDTH,
   HEADER_HEIGHT,
+  REQUEST_GUTTER,
   TEXT_PADDING,
   fitLabel,
   labelPosition,
@@ -22,7 +24,7 @@ export class Timeline {
     this.tracks = [];
     this.hits = [];
     this.selected = null;
-    this.options = { ids: true, sizes: true };
+    this.options = { ids: true };
     this.min = 0;
     this.span = 1;
     this.frame = 0;
@@ -196,7 +198,6 @@ export class Timeline {
       height,
       min: this.min,
       span: this.span,
-      sizes: this.options.sizes,
     });
     this.layout = layout;
     this.spacer.style.width = `${layout.width}px`;
@@ -214,12 +215,19 @@ export class Timeline {
       const box = layout.boxes.find(
         (box) => box.event.id === this.pendingFocus,
       );
+      const focusLeft =
+        box?.event.messageType === "REQUEST_OK"
+          ? box.x - REQUEST_GUTTER
+          : box?.x;
       if (
         box &&
-        (box.x < this.viewport.scrollLeft + AXIS_WIDTH ||
+        (focusLeft < this.viewport.scrollLeft + AXIS_WIDTH ||
           box.x + box.width > this.viewport.scrollLeft + viewportWidth)
       ) {
-        this.viewport.scrollLeft = Math.max(0, box.x - AXIS_WIDTH - 12);
+        const column = layout.columns.find(
+          (column) => column.id === box.event.trackKey,
+        );
+        this.viewport.scrollLeft = Math.max(0, column.x - AXIS_WIDTH);
       }
       if (
         box &&
@@ -326,6 +334,21 @@ export class Timeline {
       height - HEADER_HEIGHT,
     );
     ctx.clip();
+    const connector = requestConnector(layout, this.selected);
+    if (connector) {
+      ctx.save();
+      ctx.strokeStyle = COLORS.control;
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = "round";
+      ctx.setLineDash(connector.dash);
+      ctx.beginPath();
+      connector.points.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.stroke();
+      ctx.restore();
+    }
     for (const box of layout.boxes) {
       const event = box.event;
       if (
@@ -344,10 +367,10 @@ export class Timeline {
       ctx.fillRect(box.x, box.y, 3, box.height);
       ctx.strokeStyle = `${color}45`;
       ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.width - 1, box.height - 1);
-      if (event.id === this.selected) {
+      if (event.id === this.selected || event.id === connector?.to) {
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
-        ctx.strokeRect(box.x, box.y, box.width, box.height);
+        ctx.strokeRect(box.x + 1, box.y + 1, box.width - 2, box.height - 2);
         ctx.lineWidth = 1;
       }
       const hasObject = event.objectId !== null || event.objectDelta !== null;
@@ -466,6 +489,7 @@ export class Timeline {
         height,
       })),
       labels,
+      connections: connector ? [connector] : [],
     };
     this.canvas.dataset.renderedEvents = String(this.hits.length);
     this.canvas.dataset.columns = String(layout.columns.length);

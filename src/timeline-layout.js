@@ -2,27 +2,15 @@
 export const AXIS_WIDTH = 85;
 export const HEADER_HEIGHT = 64;
 export const TEXT_PADDING = 6;
+export const REQUEST_GUTTER = 28;
+export const BOX_HEIGHT = 20;
 const COLUMN_PADDING = 12;
 const BOX_GAP = 6;
 const BASE_PLOT_HEIGHT = 2000;
 
-export function eventHeight(event, sizes) {
-  return sizes && event.bytes
-    ? Math.min(30, 20 + Math.log2(event.bytes + 1) * 0.35)
-    : 20;
-}
-
 // Track positions are fixed. A shared time mapping expands crowded intervals
 // vertically, keeping equal timestamps aligned across tracks and labels honest.
-export function layoutTimeline({
-  events,
-  tracks,
-  width,
-  height,
-  min,
-  span,
-  sizes,
-}) {
+export function layoutTimeline({ events, tracks, width, height, min, span }) {
   const scale = BASE_PLOT_HEIGHT / span;
   const columns = tracks.map((track) => ({
     ...track,
@@ -65,20 +53,17 @@ export function layoutTimeline({
       );
       const center = Math.max(
         desired,
-        ...items.map(
-          ({ column, event }) =>
-            column.bottom + BOX_GAP + eventHeight(event, sizes) / 2,
-        ),
+        ...items.map(({ column }) => column.bottom + BOX_GAP + BOX_HEIGHT / 2),
       );
       for (const { column, event } of items) {
-        const boxHeight = eventHeight(event, sizes);
+        const gutter = column.id === "connection" ? REQUEST_GUTTER : 0;
         const box = {
           event,
           slot: 0,
-          x: column.x + COLUMN_PADDING,
-          y: center - boxHeight / 2,
-          width: column.width - 2 * COLUMN_PADDING,
-          height: boxHeight,
+          x: column.x + COLUMN_PADDING + gutter,
+          y: center - BOX_HEIGHT / 2,
+          width: column.width - 2 * COLUMN_PADDING - gutter,
+          height: BOX_HEIGHT,
         };
         column.boxes.push(box);
         column.bottom = box.y + box.height;

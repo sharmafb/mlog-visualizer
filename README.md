@@ -66,6 +66,12 @@ The vertical timeline has one column per track. Matching send and receive
 observations share one box; both original records remain available in the
 details panel. Repeated observations from the same endpoint stay separate.
 
+Upload and filter controls sit above the timeline. Event details use a separate
+right column on desktop, and stack above the timeline on narrow screens.
+All event boxes have the same height. Selecting REQUEST_OK draws a dotted line
+along the left edges to its original request when that request can be identified
+in the current view.
+
 Labels are measured and clipped inside their boxes. Every track is a single
 vertical stack with fixed box positions. A tall timeline follows the earlier
 viewer's time-scaled layout; crowded timestamps receive extra vertical spacing

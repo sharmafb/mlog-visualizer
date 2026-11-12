@@ -4,6 +4,8 @@
   const render = canvas.__mlogRender;
   if (!render) throw new Error("No rendered layout");
   const failures = [];
+  if (new Set(render.boxes.map((box) => box.height)).size > 1)
+    failures.push("Event boxes have different heights");
   for (let i = 0; i < render.boxes.length; i++) {
     const a = render.boxes[i];
     for (let j = i + 1; j < render.boxes.length; j++) {

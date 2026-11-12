@@ -130,43 +130,40 @@ test("a receive-only capture retains its direction and time", () => {
 for (const width of [390, 768, 1200, 2038]) {
   for (const zoom of [0.25, 1, 8]) {
     test(`boxes never overlap at width ${width} and zoom ${zoom}`, () => {
-      for (const sizes of [true, false]) {
-        const layout = layoutTimeline({
-          events: transfers,
-          tracks: source.tracks,
-          width,
-          height: 560,
-          min: -10,
-          span: source.durationMs / zoom,
-          sizes,
-        });
-        assert.equal(layout.columns.length, 3);
-        assert.deepEqual(
-          layout.columns.map((column) => column.id),
-          source.tracks.map((track) => track.id),
+      const layout = layoutTimeline({
+        events: transfers,
+        tracks: source.tracks,
+        width,
+        height: 560,
+        min: -10,
+        span: source.durationMs / zoom,
+      });
+      assert.equal(layout.columns.length, 3);
+      assert.deepEqual(
+        layout.columns.map((column) => column.id),
+        source.tracks.map((track) => track.id),
+      );
+      assertSeparate(layout.boxes);
+      assert.equal(layout.boxes.length, transfers.length);
+      assert.ok(layout.columns.every((column) => column.slots === 1));
+      for (const box of layout.boxes) {
+        assert.ok(box.height >= 20);
+        assert.ok(box.width >= 64);
+        assert.ok(
+          layout.anchors.some(
+            (anchor) =>
+              anchor.time === box.event.relativeMs &&
+              Math.abs(anchor.y - box.y - box.height / 2) < 1e-8,
+          ),
         );
-        assertSeparate(layout.boxes);
-        assert.equal(layout.boxes.length, transfers.length);
-        assert.ok(layout.columns.every((column) => column.slots === 1));
-        for (const box of layout.boxes) {
-          assert.ok(box.height >= 20);
-          assert.ok(box.width >= 64);
-          assert.ok(
-            layout.anchors.some(
-              (anchor) =>
-                anchor.time === box.event.relativeMs &&
-                Math.abs(anchor.y - box.y - box.height / 2) < 1e-8,
-            ),
-          );
-          const column = layout.columns.find(
-            (column) => column.id === box.event.trackKey,
-          );
-          assert.ok(
-            column.boxes.every(
-              (other) => other.x === box.x && other.width === box.width,
-            ),
-          );
-        }
+        const column = layout.columns.find(
+          (column) => column.id === box.event.trackKey,
+        );
+        assert.ok(
+          column.boxes.every(
+            (other) => other.x === box.x && other.width === box.width,
+          ),
+        );
       }
     });
   }
@@ -187,7 +184,6 @@ test("events at exactly the same timestamp stack vertically in one column", () =
     height: 560,
     min: 0,
     span: 10,
-    sizes: true,
   });
   assert.equal(layout.boxes.length, 200);
   assert.equal(layout.columns.length, 1);
@@ -207,7 +203,6 @@ test("time labels follow the expanded vertical positions", () => {
     height: 560,
     min: 0,
     span: source.durationMs,
-    sizes: true,
   });
   for (const anchor of layout.anchors) {
     assert.ok(Math.abs(yToTime(layout, anchor.y) - anchor.time) < 1e-8);
@@ -235,7 +230,6 @@ test("same-time events in different tracks retain alignment", () => {
     height: 560,
     min: 0,
     span: 10,
-    sizes: true,
   });
   const same = layout.boxes.filter((box) => box.event.relativeMs === 1);
   assert.equal(same[0].y + same[0].height / 2, same[1].y + same[1].height / 2);

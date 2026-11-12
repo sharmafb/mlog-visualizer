@@ -107,6 +107,7 @@ function select(event) {
   selected = event;
   const inspector = byId("inspector");
   inspector.hidden = !event;
+  byId("workspace-layout").classList.toggle("inspecting", !!event);
   timeline.focus(event);
   renderRows();
   if (!event) return;
@@ -307,12 +308,7 @@ function updateView(fit = false) {
       enabledTracks.has(track.id) &&
       filtered.some((event) => event.trackKey === track.id),
   );
-  timeline.setData(
-    filtered,
-    tracks,
-    { ids: byId("show-ids").checked, sizes: byId("show-sizes").checked },
-    fit,
-  );
+  timeline.setData(filtered, tracks, { ids: byId("show-ids").checked }, fit);
   byId("visible-count").textContent = parsed
     ? `${number(filtered.length)} transfers · ${number(observations.length)} log records`
     : "No events loaded";
@@ -470,7 +466,6 @@ byId("time-unit").addEventListener("change", parseCurrent);
 byId("endpoint").addEventListener("change", parseCurrent);
 byId("trace-filter").addEventListener("change", () => updateView(true));
 byId("show-ids").addEventListener("change", () => updateView());
-byId("show-sizes").addEventListener("change", () => updateView());
 let searchTimer;
 byId("search").addEventListener("input", () => {
   clearTimeout(searchTimer);
