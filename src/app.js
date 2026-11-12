@@ -67,36 +67,44 @@ function select(event) {
   renderRows();
   if (!event) return;
   byId("detail-title").textContent = event.label;
-  const fields = [
-    ["Event", event.name],
-    ["Time", formatMs(event.relativeMs)],
-    ["Recorded time", formatMs(event.timeMs)],
-    ["Direction", transferDirection(event)],
-    ["Sent at", event.sentTimeMs === null ? null : formatMs(event.sentTimeMs)],
-    [
-      "Received at",
-      event.receivedTimeMs === null ? null : formatMs(event.receivedTimeMs),
-    ],
-    ["Observations", String(event.observations.length)],
-    [
-      "Traces",
-      [
-        ...new Set(
-          event.observations.map((observation) => observation.traceIndex + 1),
-        ),
-      ].join(", "),
-    ],
-    ["Track", event.trackName || "Connection"],
-    ["Stream", event.streamId],
-    ["Request", event.requestId],
-    ["Track alias", event.alias],
-    ["Group", event.groupId],
-    ["Subgroup", event.subgroupId],
-    ["Object", event.objectId],
-    ["Group delta", event.groupDelta],
-    ["Object delta", event.objectDelta],
-    ["Payload", formatBytes(event.bytes)],
-  ];
+  const isControl = event.category === "control";
+  const fields = isControl
+    ? [["Time", formatMs(event.relativeMs)]]
+    : [
+        ["Event", event.name],
+        ["Time", formatMs(event.relativeMs)],
+        ["Recorded time", formatMs(event.timeMs)],
+        ["Direction", transferDirection(event)],
+        [
+          "Sent at",
+          event.sentTimeMs === null ? null : formatMs(event.sentTimeMs),
+        ],
+        [
+          "Received at",
+          event.receivedTimeMs === null ? null : formatMs(event.receivedTimeMs),
+        ],
+        ["Observations", String(event.observations.length)],
+        [
+          "Traces",
+          [
+            ...new Set(
+              event.observations.map(
+                (observation) => observation.traceIndex + 1,
+              ),
+            ),
+          ].join(", "),
+        ],
+        ["Track", event.trackName || "Connection"],
+        ["Stream", event.streamId],
+        ["Request", event.requestId],
+        ["Track alias", event.alias],
+        ["Group", event.groupId],
+        ["Subgroup", event.subgroupId],
+        ["Object", event.objectId],
+        ["Group delta", event.groupDelta],
+        ["Object delta", event.objectDelta],
+        ["Payload", formatBytes(event.bytes)],
+      ];
   byId("detail-fields").replaceChildren();
   for (const [name, value] of fields) {
     if (value === null) continue;
@@ -105,11 +113,10 @@ function select(event) {
       textElement("dd", value),
     );
   }
-  byId("detail-json").textContent = JSON.stringify(
-    rawObservations(event),
-    null,
-    2,
-  );
+  byId("detail-observations").hidden = isControl;
+  byId("detail-json").textContent = isControl
+    ? ""
+    : JSON.stringify(rawObservations(event), null, 2);
   byId("copy-event").textContent = "Copy JSON";
 }
 
