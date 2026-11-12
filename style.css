@@ -391,32 +391,6 @@ main {
   color: var(--purple);
   background: #f1ebfc;
 }
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--line);
-  margin-bottom: 22px;
-}
-.stats > div {
-  background: white;
-  padding: 17px 20px;
-}
-.stat-label {
-  display: block;
-  color: var(--muted);
-  font-size: 11px;
-  margin-bottom: 9px;
-}
-.stats strong {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums;
-}
 .timeline-card,
 .events-card {
   background: white;
@@ -808,12 +782,6 @@ pre {
   .masthead {
     padding: 0 22px;
   }
-  .stats > div {
-    padding: 15px;
-  }
-  .stats strong {
-    font-size: 19px;
-  }
   .community-label {
     display: none;
   }
@@ -891,12 +859,6 @@ pre {
   .status {
     font-size: 9px;
     padding: 6px 8px;
-  }
-  .stats {
-    grid-template-columns: 1fr 1fr;
-  }
-  .stats strong {
-    font-size: 20px;
   }
   .timeline-toolbar {
     padding: 16px;

@@ -10,7 +10,6 @@ import {
   COLORS,
   TRACK_COLORS,
   formatBytes,
-  formatDuration,
   formatMs,
   objectLabel,
 } from "./format.js";
@@ -296,14 +295,6 @@ function receive({ data }) {
     !byId("endpoint").value;
   byId("session-title").textContent = parsed.metadata.title;
   document.title = `${currentFile.name} · mLog Visualizer`;
-  byId("stat-events").textContent = number(allTransfers.length);
-  byId("stat-tracks").textContent = number(
-    parsed.tracks.filter((track) => track.id !== "connection").length,
-  );
-  byId("stat-duration").textContent = formatDuration(parsed.durationMs);
-  byId("stat-bytes").textContent = formatBytes(
-    allTransfers.reduce((sum, event) => sum + event.bytes, 0),
-  );
   byId("timeline-subtitle").textContent =
     "One vertical stack per track · crowded timestamps are spaced for readability";
   byId("trace-filter").replaceChildren(new Option("All traces", "all"));
