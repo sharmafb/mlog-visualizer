@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Explore Media over QUIC mLog and qlog files in your browser."
+    />
+    <title>mLog Visualizer</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./src/app.js"></script>
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="brand" href="./" aria-label="mLog Visualizer home"
+        ><span class="brand-mark">m</span
+        ><span>mLog <strong>Visualizer</strong></span></a
+      >
+      <span class="community-label">MEDIA OVER QUIC</span>
+      <a
+        class="source-link"
+        href="https://github.com/sharmafb/mlog-visualizer"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Source on GitHub <span aria-hidden="true">↗</span></a
+      >
+    </header>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <section>
+          <p class="eyebrow">YOUR LOG</p>
+          <div class="dropzone" id="dropzone">
+            <span class="upload-symbol" aria-hidden="true">↑</span>
+            <h1>Follow the flow.</h1>
+            <p>Drop a log here to explore what happened.</p>
+            <label class="button primary file-button" for="file-input"
+              >Choose a file<input
+                type="file"
+                id="file-input"
+                accept=".mlog,.qlog,.sqlog,.json,.jsonl,.jsonseq,.ndjson"
+                data-testid="file-input"
+            /></label>
+            <span class="file-types">mLog · qlog · JSON · JSON sequences</span>
+          </div>
+          <p class="privacy-note">
+            <span aria-hidden="true">◈</span> Your file stays on your device.
+          </p>
+          <button
+            class="sample-link"
+            id="sample-button"
+            data-testid="sample-button"
+          >
+            Try a sample log <span aria-hidden="true">→</span>
+          </button>
+        </section>
+        <section id="file-summary" class="file-summary" hidden>
+          <p class="eyebrow">LOADED FILE</p>
+          <p id="file-name" class="file-name"></p>
+          <p id="file-format" class="muted"></p>
+          <label class="field-label" for="trace-filter">Trace</label>
+          <select id="trace-filter" data-testid="trace-filter">
+            <option value="all">All traces</option>
+          </select>
+          <div id="legacy-controls" hidden>
+            <label class="field-label" for="time-unit"
+              >Legacy timestamp units</label
+            >
+            <select id="time-unit" data-testid="time-unit">
+              <option value="ns">Nanoseconds (Linux)</option>
+              <option value="us">Microseconds (macOS)</option>
+              <option value="ms">Milliseconds</option>
+              <option value="s">Seconds</option>
+            </select>
+          </div>
+          <div id="endpoint-controls" hidden>
+            <label class="field-label" for="endpoint">Recorded endpoint</label>
+            <select id="endpoint">
+              <option value="">From file</option>
+              <option value="client">Client</option>
+              <option value="server">Server</option>
+            </select>
+          </div>
+        </section>
+        <section class="filter-section">
+          <div class="section-heading">
+            <p class="eyebrow">EVENT TYPES</p>
+            <button id="all-types" class="text-button">All</button>
+          </div>
+          <div id="category-filters"></div>
+        </section>
+        <section class="filter-section">
+          <div class="section-heading">
+            <p class="eyebrow">TRACKS</p>
+            <button id="all-tracks" class="text-button">All</button>
+          </div>
+          <div id="track-filters">
+            <p class="muted empty-tracks">
+              Tracks will appear when you load a log.
+            </p>
+          </div>
+        </section>
+        <section class="display-options">
+          <p class="eyebrow">DISPLAY</p>
+          <label class="check-row"
+            ><input id="show-ids" type="checkbox" checked /> Show group and
+            object IDs</label
+          >
+          <label class="check-row"
+            ><input id="show-sizes" type="checkbox" checked /> Size reflects
+            payload length</label
+          >
+        </section>
+        <p class="sidebar-foot">An open source tool for the MoQ community.</p>
+      </aside>
+      <main>
+        <div class="workspace-heading">
+          <div>
+            <p class="eyebrow">SESSION EXPLORER</p>
+            <h2 id="session-title">A clearer view of your session.</h2>
+          </div>
+          <span id="status" class="status" role="status" aria-live="polite"
+            >Ready for a log</span
+          >
+        </div>
+        <div id="error" class="error" role="alert" hidden></div>
+        <div id="warnings" class="warnings" hidden></div>
+        <section class="stats" aria-label="Session summary">
+          <div>
+            <span class="stat-label">Events</span
+            ><strong id="stat-events">—</strong>
+          </div>
+          <div>
+            <span class="stat-label">Tracks</span
+            ><strong id="stat-tracks">—</strong>
+          </div>
+          <div>
+            <span class="stat-label">Duration</span
+            ><strong id="stat-duration">—</strong>
+          </div>
+          <div>
+            <span class="stat-label">Logged payload</span
+            ><strong id="stat-bytes">—</strong>
+          </div>
+        </section>
+        <section class="timeline-card">
+          <div class="timeline-toolbar">
+            <div>
+              <h3>Event timeline</h3>
+              <p id="timeline-subtitle">Time runs from top to bottom.</p>
+            </div>
+            <div class="toolbar-actions">
+              <button id="zoom-out" aria-label="Zoom out">−</button
+              ><button id="zoom-in" aria-label="Zoom in">+</button
+              ><button id="fit" data-testid="fit-button">Fit view</button>
+            </div>
+          </div>
+          <div class="timeline-viewport" id="timeline-viewport">
+            <canvas
+              id="timeline"
+              tabindex="0"
+              role="img"
+              aria-label="Event timeline. Use plus and minus to zoom, arrow keys to pan, or Home to fit."
+            ></canvas>
+            <div class="empty-state" id="empty-state">
+              <div class="empty-art" aria-hidden="true">
+                <i></i><i></i><i></i><b></b><b></b><b></b>
+              </div>
+              <h3>Every event tells part of the story.</h3>
+              <p>
+                Load a log to see control messages, objects, subgroups, and
+                fetches in context.
+              </p>
+            </div>
+            <div id="tooltip" class="tooltip" hidden></div>
+          </div>
+          <div class="timeline-footer">
+            <span
+              >Scroll to zoom · drag to pan · click an event for details</span
+            ><span id="visible-count">No events loaded</span>
+          </div>
+        </section>
+        <section class="events-card">
+          <div class="events-heading">
+            <h3>Events</h3>
+            <label class="search"
+              ><span aria-hidden="true">⌕</span
+              ><input
+                type="search"
+                id="search"
+                placeholder="Search events, tracks, or IDs"
+                aria-label="Search events"
+                data-testid="event-search"
+            /></label>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Endpoint</th>
+                  <th>Event</th>
+                  <th>Track</th>
+                  <th>Group / object</th>
+                  <th>Payload</th>
+                </tr>
+              </thead>
+              <tbody id="event-rows">
+                <tr>
+                  <td colspan="6" class="table-empty">
+                    Your events will appear here.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination">
+            <span id="page-label">0 events</span>
+            <div>
+              <button id="previous-page" disabled>Previous</button
+              ><button id="next-page" disabled>Next</button>
+            </div>
+          </div>
+        </section>
+        <footer class="workspace-footer">
+          <span>mLog Visualizer</span
+          ><span
+            >Built for Media over QUIC.
+            <a
+              href="https://github.com/sharmafb/mlog-visualizer/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Report an issue</a
+            ></span
+          >
+        </footer>
+      </main>
+    </div>
+    <aside id="inspector" class="inspector" aria-label="Event details" hidden>
+      <div class="inspector-heading">
+        <div>
+          <p class="eyebrow">EVENT DETAILS</p>
+          <h3 id="detail-title"></h3>
+        </div>
+        <button id="close-inspector" aria-label="Close event details">×</button>
+      </div>
+      <dl id="detail-fields"></dl>
+      <div class="raw-heading">
+        <h4>Raw event</h4>
+        <button id="copy-event">Copy JSON</button>
+      </div>
+      <pre id="detail-json"></pre>
+    </aside>
+  </body>
+</html>

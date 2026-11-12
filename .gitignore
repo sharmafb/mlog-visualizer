@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.DS_Store
+*.tar.gz
+*.mlog
+*.qlog
+*.sqlog
+!examples/*.mlog
+!examples/*.qlog
+!examples/*.sqlog
+test-results/
+.env

@@ -1,0 +1,714 @@
+{
+  "time": "0",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_created",
+  "data": {
+    "stream_id": 0,
+    "message": {
+      "type": "setup",
+      "setup_options": [
+        {
+          "name": "max_request_id",
+          "value": 128
+        }
+      ]
+    }
+  }
+}
+{
+  "time": "1150000",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_parsed",
+  "data": {
+    "stream_id": 0,
+    "message": {
+      "type": "setup",
+      "setup_options": [
+        {
+          "name": "max_request_id",
+          "value": 128
+        }
+      ]
+    }
+  }
+}
+{
+  "time": "3000000",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_parsed",
+  "data": {
+    "stream_id": 1,
+    "message": {
+      "type": "publish",
+      "request_id": 1,
+      "track_alias": 0,
+      "track_namespace": [
+        {
+          "value": "live"
+        },
+        {
+          "value": "demo"
+        }
+      ],
+      "track_name": {
+        "value": "video"
+      },
+      "number_of_parameters": 0
+    }
+  }
+}
+{
+  "time": "5000000",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_created",
+  "data": {
+    "stream_id": 4,
+    "message": {
+      "type": "publish",
+      "request_id": 0,
+      "track_alias": 0,
+      "track_namespace": [
+        {
+          "value": "live"
+        },
+        {
+          "value": "demo"
+        }
+      ],
+      "track_name": {
+        "value": "audio"
+      },
+      "number_of_parameters": 0
+    }
+  }
+}
+{
+  "time": "6000000",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_created",
+  "data": {
+    "stream_id": 1,
+    "message": {
+      "type": "request_ok",
+      "number_of_parameters": 0
+    }
+  }
+}
+{
+  "time": "12345000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_header_parsed",
+  "data": {
+    "stream_id": 3,
+    "track_alias": 0,
+    "group_id": 14,
+    "subgroup_id_mode": 1,
+    "first_object": true,
+    "contains_end_of_group": true,
+    "properties_present": true
+  }
+}
+{
+  "time": "14000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 0,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "19000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 1,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "24000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 2,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "29000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 3,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "30000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 40000,
+    "properties": [
+      {
+        "type": 2,
+        "value": 0
+      }
+    ]
+  }
+}
+{
+  "time": "34000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 4,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "38000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 1750,
+    "properties": [
+      {
+        "type": 2,
+        "value": 1
+      }
+    ]
+  }
+}
+{
+  "time": "39000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 5,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "44000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 6,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "46000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 1800,
+    "properties": [
+      {
+        "type": 2,
+        "value": 2
+      }
+    ]
+  }
+}
+{
+  "time": "49000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 7,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "51000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 1850,
+    "properties": [
+      {
+        "type": 2,
+        "value": 3
+      }
+    ]
+  }
+}
+{
+  "time": "54000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 8,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "59000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 1900,
+    "properties": [
+      {
+        "type": 2,
+        "value": 4
+      }
+    ]
+  }
+}
+{
+  "time": "59000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 9,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "64000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 10,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "67000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 1950,
+    "properties": [
+      {
+        "type": 2,
+        "value": 5
+      }
+    ]
+  }
+}
+{
+  "time": "69000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 11,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "72000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2000,
+    "properties": [
+      {
+        "type": 2,
+        "value": 6
+      }
+    ]
+  }
+}
+{
+  "time": "74000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 12,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "79000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 13,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "80000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2050,
+    "properties": [
+      {
+        "type": 2,
+        "value": 7
+      }
+    ]
+  }
+}
+{
+  "time": "84000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 14,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "88000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2100,
+    "properties": [
+      {
+        "type": 2,
+        "value": 8
+      }
+    ]
+  }
+}
+{
+  "time": "89000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 15,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "93000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2150,
+    "properties": [
+      {
+        "type": 2,
+        "value": 9
+      }
+    ]
+  }
+}
+{
+  "time": "94000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 16,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "99000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 17,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "101000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2200,
+    "properties": [
+      {
+        "type": 2,
+        "value": 10
+      }
+    ]
+  }
+}
+{
+  "time": "104000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 18,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": false
+  }
+}
+{
+  "time": "109000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2250,
+    "properties": [
+      {
+        "type": 2,
+        "value": 11
+      }
+    ]
+  }
+}
+{
+  "time": "109000000",
+  "vantagePoint": "client",
+  "name": "moqt:object_datagram_created",
+  "data": {
+    "track_alias": 0,
+    "group_id": 14,
+    "object_id": 19,
+    "object_payload": {
+      "length": 256
+    },
+    "end_of_group": true
+  }
+}
+{
+  "time": "114000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2300,
+    "properties": [
+      {
+        "type": 2,
+        "value": 12
+      }
+    ]
+  }
+}
+{
+  "time": "120000000",
+  "vantagePoint": "client",
+  "name": "moqt:padding_datagram_created",
+  "data": {
+    "padding_length": 32
+  }
+}
+{
+  "time": "122000000",
+  "vantagePoint": "client",
+  "name": "moqt:subgroup_object_parsed",
+  "data": {
+    "stream_id": 3,
+    "object_id_delta": 0,
+    "object_payload_length": 2350,
+    "properties": [
+      {
+        "type": 2,
+        "value": 13
+      }
+    ]
+  }
+}
+{
+  "time": "150000000",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_created",
+  "data": {
+    "stream_id": 8,
+    "message": {
+      "type": "fetch",
+      "request_id": 2,
+      "track_namespace": [
+        {
+          "value": "live"
+        },
+        {
+          "value": "demo"
+        }
+      ],
+      "track_name": {
+        "value": "video"
+      },
+      "number_of_parameters": 1,
+      "parameters": [
+        {
+          "name": "group_order",
+          "value": 2
+        }
+      ]
+    }
+  }
+}
+{
+  "time": "157000000",
+  "vantagePoint": "client",
+  "name": "moqt:fetch_header_parsed",
+  "data": {
+    "stream_id": 7,
+    "request_id": 2
+  }
+}
+{
+  "time": "165000000",
+  "vantagePoint": "client",
+  "name": "moqt:fetch_object_parsed",
+  "data": {
+    "stream_id": 7,
+    "group_id_delta": 14,
+    "object_id_delta": 0,
+    "subgroup_id_bits": 0,
+    "datagram": false,
+    "object_payload_length": 12000
+  }
+}
+{
+  "time": "175000000",
+  "vantagePoint": "client",
+  "name": "moqt:fetch_object_parsed",
+  "data": {
+    "stream_id": 7,
+    "group_id_delta": 0,
+    "object_id_delta": 0,
+    "subgroup_id_bits": 0,
+    "datagram": false,
+    "object_payload_length": 6000
+  }
+}
+{
+  "time": "195000000",
+  "vantagePoint": "client",
+  "name": "moqt:fetch_object_parsed",
+  "data": {
+    "stream_id": 7,
+    "group_id_delta": 10,
+    "object_id_delta": 0,
+    "datagram": false,
+    "end_of_timed_out_range": true
+  }
+}
+{
+  "time": "216000000",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_parsed",
+  "data": {
+    "stream_id": 0,
+    "message": {
+      "type": "goaway",
+      "new_session_uri": {
+        "length": 0
+      },
+      "timeout": 0
+    }
+  }
+}

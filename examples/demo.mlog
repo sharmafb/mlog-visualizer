@@ -1,0 +1,1377 @@
+{
+  "file_schema": "urn:ietf:params:qlog:file:contained",
+  "serialization_format": "application/qlog+json",
+  "title": "Live media session (synthetic)",
+  "traces": [
+    {
+      "title": "Client trace",
+      "vantage_point": {
+        "type": "client"
+      },
+      "event_schemas": [
+        "urn:ietf:params:qlog:events:moqt-08"
+      ],
+      "common_fields": {
+        "time_format": "relative_to_epoch",
+        "reference_time": {
+          "clock_type": "system",
+          "epoch": "2026-01-01T00:00:00.000Z"
+        }
+      },
+      "events": [
+        {
+          "time": 0,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 0,
+            "message": {
+              "type": "setup",
+              "setup_options": [
+                {
+                  "name": "max_request_id",
+                  "value": 128
+                }
+              ]
+            }
+          }
+        },
+        {
+          "time": 1.15,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 0,
+            "message": {
+              "type": "setup",
+              "setup_options": [
+                {
+                  "name": "max_request_id",
+                  "value": 128
+                }
+              ]
+            }
+          }
+        },
+        {
+          "time": 3,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 1,
+            "message": {
+              "type": "publish",
+              "request_id": 1,
+              "track_alias": 0,
+              "track_namespace": [
+                {
+                  "value": "live"
+                },
+                {
+                  "value": "demo"
+                }
+              ],
+              "track_name": {
+                "value": "video"
+              },
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
+          "time": 5,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 4,
+            "message": {
+              "type": "publish",
+              "request_id": 0,
+              "track_alias": 0,
+              "track_namespace": [
+                {
+                  "value": "live"
+                },
+                {
+                  "value": "demo"
+                }
+              ],
+              "track_name": {
+                "value": "audio"
+              },
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
+          "time": 6,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 1,
+            "message": {
+              "type": "request_ok",
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
+          "time": 12.345,
+          "name": "moqt:subgroup_header_parsed",
+          "data": {
+            "stream_id": 3,
+            "track_alias": 0,
+            "group_id": 14,
+            "subgroup_id_mode": 1,
+            "first_object": true,
+            "contains_end_of_group": true,
+            "properties_present": true
+          }
+        },
+        {
+          "time": 14,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 0,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 19,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 1,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 24,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 2,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 29,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 3,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 30,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 40000,
+            "properties": [
+              {
+                "type": 2,
+                "value": 0
+              }
+            ]
+          }
+        },
+        {
+          "time": 34,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 4,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 38,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1750,
+            "properties": [
+              {
+                "type": 2,
+                "value": 1
+              }
+            ]
+          }
+        },
+        {
+          "time": 39,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 5,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 44,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 6,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 46,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1800,
+            "properties": [
+              {
+                "type": 2,
+                "value": 2
+              }
+            ]
+          }
+        },
+        {
+          "time": 49,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 7,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 51,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1850,
+            "properties": [
+              {
+                "type": 2,
+                "value": 3
+              }
+            ]
+          }
+        },
+        {
+          "time": 54,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 8,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 59,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1900,
+            "properties": [
+              {
+                "type": 2,
+                "value": 4
+              }
+            ]
+          }
+        },
+        {
+          "time": 59,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 9,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 64,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 10,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 67,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1950,
+            "properties": [
+              {
+                "type": 2,
+                "value": 5
+              }
+            ]
+          }
+        },
+        {
+          "time": 69,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 11,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 72,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2000,
+            "properties": [
+              {
+                "type": 2,
+                "value": 6
+              }
+            ]
+          }
+        },
+        {
+          "time": 74,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 12,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 79,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 13,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 80,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2050,
+            "properties": [
+              {
+                "type": 2,
+                "value": 7
+              }
+            ]
+          }
+        },
+        {
+          "time": 84,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 14,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 88,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2100,
+            "properties": [
+              {
+                "type": 2,
+                "value": 8
+              }
+            ]
+          }
+        },
+        {
+          "time": 89,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 15,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 93,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2150,
+            "properties": [
+              {
+                "type": 2,
+                "value": 9
+              }
+            ]
+          }
+        },
+        {
+          "time": 94,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 16,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 99,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 17,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 101,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2200,
+            "properties": [
+              {
+                "type": 2,
+                "value": 10
+              }
+            ]
+          }
+        },
+        {
+          "time": 104,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 18,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 109,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2250,
+            "properties": [
+              {
+                "type": 2,
+                "value": 11
+              }
+            ]
+          }
+        },
+        {
+          "time": 109,
+          "name": "moqt:object_datagram_created",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 19,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": true
+          }
+        },
+        {
+          "time": 114,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2300,
+            "properties": [
+              {
+                "type": 2,
+                "value": 12
+              }
+            ]
+          }
+        },
+        {
+          "time": 120,
+          "name": "moqt:padding_datagram_created",
+          "data": {
+            "padding_length": 32
+          }
+        },
+        {
+          "time": 122,
+          "name": "moqt:subgroup_object_parsed",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2350,
+            "properties": [
+              {
+                "type": 2,
+                "value": 13
+              }
+            ]
+          }
+        },
+        {
+          "time": 150,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 8,
+            "message": {
+              "type": "fetch",
+              "request_id": 2,
+              "track_namespace": [
+                {
+                  "value": "live"
+                },
+                {
+                  "value": "demo"
+                }
+              ],
+              "track_name": {
+                "value": "video"
+              },
+              "number_of_parameters": 1,
+              "parameters": [
+                {
+                  "name": "group_order",
+                  "value": 2
+                }
+              ]
+            }
+          }
+        },
+        {
+          "time": 157,
+          "name": "moqt:fetch_header_parsed",
+          "data": {
+            "stream_id": 7,
+            "request_id": 2
+          }
+        },
+        {
+          "time": 165,
+          "name": "moqt:fetch_object_parsed",
+          "data": {
+            "stream_id": 7,
+            "group_id_delta": 14,
+            "object_id_delta": 0,
+            "subgroup_id_bits": 0,
+            "datagram": false,
+            "object_payload_length": 12000
+          }
+        },
+        {
+          "time": 175,
+          "name": "moqt:fetch_object_parsed",
+          "data": {
+            "stream_id": 7,
+            "group_id_delta": 0,
+            "object_id_delta": 0,
+            "subgroup_id_bits": 0,
+            "datagram": false,
+            "object_payload_length": 6000
+          }
+        },
+        {
+          "time": 195,
+          "name": "moqt:fetch_object_parsed",
+          "data": {
+            "stream_id": 7,
+            "group_id_delta": 10,
+            "object_id_delta": 0,
+            "datagram": false,
+            "end_of_timed_out_range": true
+          }
+        },
+        {
+          "time": 216,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 0,
+            "message": {
+              "type": "goaway",
+              "new_session_uri": {
+                "length": 0
+              },
+              "timeout": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Server trace",
+      "vantage_point": {
+        "type": "server"
+      },
+      "event_schemas": [
+        "urn:ietf:params:qlog:events:moqt-08"
+      ],
+      "common_fields": {
+        "time_format": "relative_to_epoch",
+        "reference_time": {
+          "clock_type": "system",
+          "epoch": "2026-01-01T00:00:00.000Z"
+        }
+      },
+      "events": [
+        {
+          "time": 0.25,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 0,
+            "message": {
+              "type": "setup",
+              "setup_options": [
+                {
+                  "name": "max_request_id",
+                  "value": 128
+                }
+              ]
+            }
+          }
+        },
+        {
+          "time": 0.5,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 0,
+            "message": {
+              "type": "setup",
+              "setup_options": [
+                {
+                  "name": "max_request_id",
+                  "value": 128
+                }
+              ]
+            }
+          }
+        },
+        {
+          "time": 2,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 1,
+            "message": {
+              "type": "publish",
+              "request_id": 1,
+              "track_alias": 0,
+              "track_namespace": [
+                {
+                  "value": "live"
+                },
+                {
+                  "value": "demo"
+                }
+              ],
+              "track_name": {
+                "value": "video"
+              },
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
+          "time": 5.2,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 4,
+            "message": {
+              "type": "publish",
+              "request_id": 0,
+              "track_alias": 0,
+              "track_namespace": [
+                {
+                  "value": "live"
+                },
+                {
+                  "value": "demo"
+                }
+              ],
+              "track_name": {
+                "value": "audio"
+              },
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
+          "time": 6.25,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 1,
+            "message": {
+              "type": "request_ok",
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
+          "time": 10,
+          "name": "moqt:subgroup_header_created",
+          "data": {
+            "stream_id": 3,
+            "track_alias": 0,
+            "group_id": 14,
+            "subgroup_id_mode": 1,
+            "first_object": true,
+            "contains_end_of_group": true,
+            "properties_present": true
+          }
+        },
+        {
+          "time": 12.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 40000,
+            "properties": [
+              {
+                "type": 2,
+                "value": 0
+              }
+            ]
+          }
+        },
+        {
+          "time": 15.8,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 0,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 19.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1750,
+            "properties": [
+              {
+                "type": 2,
+                "value": 1
+              }
+            ]
+          }
+        },
+        {
+          "time": 21,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 1,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 26.2,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 2,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 26.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1800,
+            "properties": [
+              {
+                "type": 2,
+                "value": 2
+              }
+            ]
+          }
+        },
+        {
+          "time": 31.4,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 3,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 33.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1850,
+            "properties": [
+              {
+                "type": 2,
+                "value": 3
+              }
+            ]
+          }
+        },
+        {
+          "time": 35.8,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 4,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 40.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1900,
+            "properties": [
+              {
+                "type": 2,
+                "value": 4
+              }
+            ]
+          }
+        },
+        {
+          "time": 41,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 5,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 46.2,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 6,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 47.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 1950,
+            "properties": [
+              {
+                "type": 2,
+                "value": 5
+              }
+            ]
+          }
+        },
+        {
+          "time": 51.4,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 7,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 54.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2000,
+            "properties": [
+              {
+                "type": 2,
+                "value": 6
+              }
+            ]
+          }
+        },
+        {
+          "time": 55.8,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 8,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 61,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 9,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 61.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2050,
+            "properties": [
+              {
+                "type": 2,
+                "value": 7
+              }
+            ]
+          }
+        },
+        {
+          "time": 66.2,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 10,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 68.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2100,
+            "properties": [
+              {
+                "type": 2,
+                "value": 8
+              }
+            ]
+          }
+        },
+        {
+          "time": 71.4,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 11,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 75.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2150,
+            "properties": [
+              {
+                "type": 2,
+                "value": 9
+              }
+            ]
+          }
+        },
+        {
+          "time": 75.8,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 12,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 81,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 13,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 82.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2200,
+            "properties": [
+              {
+                "type": 2,
+                "value": 10
+              }
+            ]
+          }
+        },
+        {
+          "time": 86.2,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 14,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 89.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2250,
+            "properties": [
+              {
+                "type": 2,
+                "value": 11
+              }
+            ]
+          }
+        },
+        {
+          "time": 91.4,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 15,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 95.8,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 16,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 96.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2300,
+            "properties": [
+              {
+                "type": 2,
+                "value": 12
+              }
+            ]
+          }
+        },
+        {
+          "time": 101,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 17,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 103.5,
+          "name": "moqt:subgroup_object_created",
+          "data": {
+            "stream_id": 3,
+            "object_id_delta": 0,
+            "object_payload_length": 2350,
+            "properties": [
+              {
+                "type": 2,
+                "value": 13
+              }
+            ]
+          }
+        },
+        {
+          "time": 106.2,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 18,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": false
+          }
+        },
+        {
+          "time": 111.4,
+          "name": "moqt:object_datagram_parsed",
+          "data": {
+            "track_alias": 0,
+            "group_id": 14,
+            "object_id": 19,
+            "object_payload": {
+              "length": 256
+            },
+            "end_of_group": true
+          }
+        },
+        {
+          "time": 121,
+          "name": "moqt:padding_datagram_parsed",
+          "data": {
+            "padding_length": 32
+          }
+        },
+        {
+          "time": 152,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 8,
+            "message": {
+              "type": "fetch",
+              "request_id": 2,
+              "track_namespace": [
+                {
+                  "value": "live"
+                },
+                {
+                  "value": "demo"
+                }
+              ],
+              "track_name": {
+                "value": "video"
+              },
+              "number_of_parameters": 1,
+              "parameters": [
+                {
+                  "name": "group_order",
+                  "value": 2
+                }
+              ]
+            }
+          }
+        },
+        {
+          "time": 155,
+          "name": "moqt:fetch_header_created",
+          "data": {
+            "stream_id": 7,
+            "request_id": 2
+          }
+        },
+        {
+          "time": 160,
+          "name": "moqt:fetch_object_created",
+          "data": {
+            "stream_id": 7,
+            "group_id_delta": 14,
+            "object_id_delta": 0,
+            "subgroup_id_bits": 0,
+            "datagram": false,
+            "object_payload_length": 12000
+          }
+        },
+        {
+          "time": 170,
+          "name": "moqt:fetch_object_created",
+          "data": {
+            "stream_id": 7,
+            "group_id_delta": 0,
+            "object_id_delta": 0,
+            "subgroup_id_bits": 0,
+            "datagram": false,
+            "object_payload_length": 6000
+          }
+        },
+        {
+          "time": 190,
+          "name": "moqt:fetch_object_created",
+          "data": {
+            "stream_id": 7,
+            "group_id_delta": 10,
+            "object_id_delta": 0,
+            "datagram": false,
+            "end_of_timed_out_range": true
+          }
+        },
+        {
+          "time": 215,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 0,
+            "message": {
+              "type": "goaway",
+              "new_session_uri": {
+                "length": 0
+              },
+              "timeout": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
