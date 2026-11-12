@@ -2,6 +2,8 @@
 
 A public browser tool for exploring Media over QUIC (MoQ) logs.
 
+**[Open the live viewer](https://fb.mvfst.net/mlog/)**
+
 Upload an `.mlog`, `.qlog`, `.sqlog`, `.json`, or JSON sequence file. Inspect
 events on a timeline, filter tracks and event types, zoom into delivery bursts,
 and open the full data for an event. Files are processed on your device and
