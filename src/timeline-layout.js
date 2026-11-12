@@ -19,7 +19,7 @@ export function layoutTimeline({ events, tracks, width, height, min, span }) {
     bottom: HEADER_HEIGHT,
   }));
   const laneById = new Map(columns.map((column) => [column.id, column]));
-  const contentWidth = Math.max(width, AXIS_WIDTH + columns.length * 190 + 12);
+  const contentWidth = Math.max(width, AXIS_WIDTH + columns.length * 200 + 12);
   const columnWidth = columns.length
     ? (contentWidth - AXIS_WIDTH - 12) / columns.length
     : 0;

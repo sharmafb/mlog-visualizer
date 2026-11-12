@@ -71,6 +71,7 @@ right column on desktop, and stack above the timeline on narrow screens.
 Control message details show the recorded setup options, parameters, and track
 properties alongside the original logged observations.
 Datagram details show Time, Track, Group, Object, and Payload.
+Box labels use `gp`, `subgp`, and `obj` for their IDs; object datagrams are marked `[DATAGRAM]`.
 All event types and group/object IDs are displayed; track and trace controls filter the timeline.
 Left/right arrow keys select events, and up/down arrow keys pan the timeline.
 All event boxes have the same height. Selecting REQUEST_OK draws a dotted line

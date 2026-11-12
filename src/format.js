@@ -55,9 +55,12 @@ export function objectLabel(event) {
       : event.objectDelta !== null
         ? `Δ${event.objectDelta}`
         : "—";
-  return group === "—" && object === "—"
-    ? "—"
-    : `group = ${group}, object = ${object}`;
+  if (group === "—" && object === "—") return "—";
+  const subgroup = event.name?.includes("subgroup_object")
+    ? `subgp = ${event.subgroupId ?? "—"}, `
+    : "";
+  const prefix = event.category === "object" ? "[DATAGRAM] " : "";
+  return `${prefix}gp = ${group}, ${subgroup}obj = ${object}`;
 }
 export function directionArrow(event) {
   if (event.endpoint === "unknown") return "·";
