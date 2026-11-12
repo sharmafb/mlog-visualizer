@@ -128,7 +128,7 @@
         <div id="warnings" class="warnings" hidden></div>
         <section class="stats" aria-label="Session summary">
           <div>
-            <span class="stat-label">Events</span
+            <span class="stat-label">Transfers</span
             ><strong id="stat-events">—</strong>
           </div>
           <div>
@@ -140,7 +140,7 @@
             ><strong id="stat-duration">—</strong>
           </div>
           <div>
-            <span class="stat-label">Logged payload</span
+            <span class="stat-label">Transfer payload</span
             ><strong id="stat-bytes">—</strong>
           </div>
         </section>
@@ -157,6 +157,7 @@
             </div>
           </div>
           <div class="timeline-viewport" id="timeline-viewport">
+            <div id="timeline-spacer" aria-hidden="true"></div>
             <canvas
               id="timeline"
               tabindex="0"
@@ -177,13 +178,14 @@
           </div>
           <div class="timeline-footer">
             <span
-              >Scroll to zoom · drag to pan · click an event for details</span
+              >Scroll to zoom · drag to pan · Shift+scroll across tracks · click
+              for details</span
             ><span id="visible-count">No events loaded</span>
           </div>
         </section>
         <section class="events-card">
           <div class="events-heading">
-            <h3>Events</h3>
+            <h3>Transfers</h3>
             <label class="search"
               ><span aria-hidden="true">⌕</span
               ><input
@@ -199,7 +201,7 @@
               <thead>
                 <tr>
                   <th>Time</th>
-                  <th>Endpoint</th>
+                  <th>Direction</th>
                   <th>Event</th>
                   <th>Track</th>
                   <th>Group / object</th>
@@ -247,7 +249,7 @@
       </div>
       <dl id="detail-fields"></dl>
       <div class="raw-heading">
-        <h4>Raw event</h4>
+        <h4>Logged observations</h4>
         <button id="copy-event">Copy JSON</button>
       </div>
       <pre id="detail-json"></pre>

@@ -459,15 +459,23 @@ main {
   background: #fff;
 }
 canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: block;
   cursor: grab;
   touch-action: none;
   width: 100%;
   height: 560px;
-  min-width: 600px;
+  min-width: 0;
 }
 canvas.dragging {
   cursor: grabbing;
+}
+#timeline-spacer {
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
 }
 .timeline-footer {
   padding: 10px 20px;

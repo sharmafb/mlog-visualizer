@@ -1,10 +1,14 @@
 // Copyright (c) 2026 Aman Sharma. MIT licensed.
 import { Timeline } from "./timeline.js";
 import {
+  mergeTransfers,
+  rawObservations,
+  transferDirection,
+} from "./transfer-events.js";
+import {
   CATEGORY_NAMES,
   COLORS,
   TRACK_COLORS,
-  directionArrow,
   formatBytes,
   formatDuration,
   formatMs,
@@ -19,6 +23,7 @@ const worker = new Worker(new URL("./log-worker.js", import.meta.url), {
 const enabledCategories = new Set(Object.keys(CATEGORY_NAMES));
 let enabledTracks = new Set();
 let parsed = null;
+let allTransfers = [];
 let filtered = [];
 let selected = null;
 let page = 0;
@@ -48,9 +53,10 @@ function hover(event, position) {
   const tooltip = byId("tooltip");
   tooltip.hidden = !event;
   if (!event) return;
-  tooltip.textContent = `${directionArrow(event)} ${event.label}\n${formatMs(event.relativeMs)} · ${event.endpoint} ${event.direction}\n${event.trackName || "Connection"}\nGroup / object: ${objectLabel(event)}${event.bytes ? `\n${formatBytes(event.bytes)}` : ""}`;
-  const width = byId("timeline-viewport").clientWidth;
-  tooltip.style.left = `${Math.max(10, Math.min(position.x + 14, width - Math.min(300, tooltip.offsetWidth) - 12))}px`;
+  tooltip.textContent = `${event.label}\n${formatMs(event.relativeMs)} · ${transferDirection(event)}\n${event.trackName || "Connection"}\n${event.observations.length} logged ${event.observations.length === 1 ? "observation" : "observations"}\nGroup / object: ${objectLabel(event)}${event.bytes ? `\n${formatBytes(event.bytes)}` : ""}`;
+  const viewport = byId("timeline-viewport");
+  const width = viewport.clientWidth;
+  tooltip.style.left = `${viewport.scrollLeft + Math.max(10, Math.min(position.x - viewport.scrollLeft + 14, width - Math.min(300, tooltip.offsetWidth) - 12))}px`;
   tooltip.style.top = `${Math.max(8, Math.min(position.y + 12, byId("timeline-viewport").clientHeight - tooltip.offsetHeight - 10))}px`;
 }
 
@@ -66,8 +72,21 @@ function select(event) {
     ["Event", event.name],
     ["Time", formatMs(event.relativeMs)],
     ["Recorded time", formatMs(event.timeMs)],
-    ["Endpoint", `${event.endpoint} · ${event.direction}`],
-    ["Trace", String(event.traceIndex + 1)],
+    ["Direction", transferDirection(event)],
+    ["Sent at", event.sentTimeMs === null ? null : formatMs(event.sentTimeMs)],
+    [
+      "Received at",
+      event.receivedTimeMs === null ? null : formatMs(event.receivedTimeMs),
+    ],
+    ["Observations", String(event.observations.length)],
+    [
+      "Traces",
+      [
+        ...new Set(
+          event.observations.map((observation) => observation.traceIndex + 1),
+        ),
+      ].join(", "),
+    ],
     ["Track", event.trackName || "Connection"],
     ["Stream", event.streamId],
     ["Request", event.requestId],
@@ -87,7 +106,11 @@ function select(event) {
       textElement("dd", value),
     );
   }
-  byId("detail-json").textContent = JSON.stringify(event.raw, null, 2);
+  byId("detail-json").textContent = JSON.stringify(
+    rawObservations(event),
+    null,
+    2,
+  );
   byId("copy-event").textContent = "Copy JSON";
 }
 
@@ -109,7 +132,7 @@ function categoryControls() {
     const dot = textElement("span", "", "dot");
     dot.style.background = COLORS[category];
     const count = parsed
-      ? parsed.events.filter((event) => event.category === category).length
+      ? allTransfers.filter((event) => event.category === category).length
       : 0;
     row.append(
       input,
@@ -172,7 +195,7 @@ function renderRows() {
     const time = textElement("td", formatMs(event.relativeMs), "time");
     const endpoint = textElement(
       "td",
-      `${directionArrow(event)} ${event.endpoint}`,
+      transferDirection(event),
       "endpoint-tag",
     );
     const name = document.createElement("td");
@@ -200,7 +223,7 @@ function renderRows() {
     const cell = textElement(
       "td",
       parsed
-        ? "No events match these filters."
+        ? "No transfers match these filters."
         : "Your events will appear here.",
       "table-empty",
     );
@@ -209,8 +232,8 @@ function renderRows() {
     rows.append(row);
   }
   byId("page-label").textContent = filtered.length
-    ? `${number(start + 1)}–${number(Math.min(start + PAGE_SIZE, filtered.length))} of ${number(filtered.length)} events`
-    : "0 events";
+    ? `${number(start + 1)}–${number(Math.min(start + PAGE_SIZE, filtered.length))} of ${number(filtered.length)} transfers`
+    : "0 transfers";
   byId("previous-page").disabled = page === 0;
   byId("next-page").disabled = (page + 1) * PAGE_SIZE >= filtered.length;
 }
@@ -218,16 +241,19 @@ function renderRows() {
 function updateView(fit = false) {
   const search = byId("search").value.trim().toLowerCase();
   const trace = byId("trace-filter").value;
-  filtered = (parsed?.events || []).filter(
+  const observations = (parsed?.events || []).filter(
     (event) =>
       enabledCategories.has(event.category) &&
       enabledTracks.has(event.trackKey) &&
       (trace === "all" || event.traceIndex === Number(trace)) &&
       (!search || event.search.includes(search)),
   );
+  filtered = mergeTransfers(observations);
   page = 0;
-  const tracks = (parsed?.tracks || []).filter((track) =>
-    enabledTracks.has(track.id),
+  const tracks = (parsed?.tracks || []).filter(
+    (track) =>
+      enabledTracks.has(track.id) &&
+      filtered.some((event) => event.trackKey === track.id),
   );
   timeline.setData(
     filtered,
@@ -236,7 +262,7 @@ function updateView(fit = false) {
     fit,
   );
   byId("visible-count").textContent = parsed
-    ? `${number(filtered.length)} of ${number(parsed.events.length)} events`
+    ? `${number(filtered.length)} transfers · ${number(observations.length)} log records`
     : "No events loaded";
   byId("empty-state").hidden = !!parsed;
   if (selected && !filtered.some((event) => event.id === selected.id))
@@ -253,6 +279,7 @@ function receive({ data }) {
   }
   const oldParsed = parsed;
   parsed = data.result;
+  allTransfers = mergeTransfers(parsed.events);
   window.dispatchEvent(
     new CustomEvent("mlog-loaded", {
       detail: { events: parsed.events.length },
@@ -269,14 +296,16 @@ function receive({ data }) {
     !byId("endpoint").value;
   byId("session-title").textContent = parsed.metadata.title;
   document.title = `${currentFile.name} · mLog Visualizer`;
-  byId("stat-events").textContent = number(parsed.events.length);
+  byId("stat-events").textContent = number(allTransfers.length);
   byId("stat-tracks").textContent = number(
     parsed.tracks.filter((track) => track.id !== "connection").length,
   );
   byId("stat-duration").textContent = formatDuration(parsed.durationMs);
-  byId("stat-bytes").textContent = formatBytes(parsed.loggedBytes);
+  byId("stat-bytes").textContent = formatBytes(
+    allTransfers.reduce((sum, event) => sum + event.bytes, 0),
+  );
   byId("timeline-subtitle").textContent =
-    `${parsed.events.length ? [...new Set(parsed.events.map((event) => event.endpoint))].join(" + ") : "Empty trace"} · time from first event`;
+    "One column per track · matching send and receive observations share a box";
   byId("trace-filter").replaceChildren(new Option("All traces", "all"));
   for (let i = 0; i < parsed.metadata.traceCount; i++) {
     const endpoints = [
@@ -301,9 +330,12 @@ function receive({ data }) {
   trackControls();
   select(null);
   updateView(!oldParsed || oldParsed !== parsed);
-  status(`${number(parsed.events.length)} events loaded`);
+  status(
+    `${number(parsed.events.length)} log records · ${number(allTransfers.length)} transfers`,
+  );
   document.body.dataset.loadedEvents = String(parsed.events.length);
   document.body.dataset.loadedFile = currentFile.name;
+  document.body.dataset.loadedTransfers = String(allTransfers.length);
 }
 
 worker.addEventListener("message", receive);
@@ -426,7 +458,9 @@ byId("next-page").addEventListener("click", () => {
 byId("copy-event").addEventListener("click", async () => {
   if (!selected) return;
   try {
-    await navigator.clipboard.writeText(JSON.stringify(selected.raw, null, 2));
+    await navigator.clipboard.writeText(
+      JSON.stringify(rawObservations(selected), null, 2),
+    );
     byId("copy-event").textContent = "Copied";
   } catch {
     byId("copy-event").textContent = "Select JSON to copy";

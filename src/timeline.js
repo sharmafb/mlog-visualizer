@@ -1,5 +1,14 @@
 // Copyright (c) 2026 Aman Sharma. MIT licensed.
-import { COLORS, TRACK_COLORS, directionArrow, formatMs } from "./format.js";
+import { COLORS, TRACK_COLORS, formatMs } from "./format.js";
+import { transferDirection } from "./transfer-events.js";
+import {
+  AXIS_WIDTH,
+  HEADER_HEIGHT,
+  TEXT_PADDING,
+  fitLabel,
+  labelPosition,
+  layoutTimeline,
+} from "./timeline-layout.js";
 
 export class Timeline {
   constructor(canvas, { select, hover }) {
@@ -16,13 +25,23 @@ export class Timeline {
     this.span = 1;
     this.frame = 0;
     this.drag = null;
+    this.viewport = canvas.parentElement;
+    this.spacer = document.getElementById("timeline-spacer");
+    this.pendingFocus = null;
     this.observer = new ResizeObserver(() => this.schedule());
     this.observer.observe(canvas.parentElement);
+    this.viewport.addEventListener("scroll", () => this.schedule());
     canvas.addEventListener(
       "wheel",
       (event) => {
         if (!this.events.length) return;
         event.preventDefault();
+        if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+          this.viewport.scrollLeft += event.shiftKey
+            ? event.deltaY
+            : event.deltaX;
+          return;
+        }
         this.zoom(
           Math.exp(-Math.max(-100, Math.min(100, event.deltaY)) * 0.004),
           this.position(event).y,
@@ -114,6 +133,7 @@ export class Timeline {
 
   focus(event) {
     this.selected = event?.id || null;
+    this.pendingFocus = event?.id || null;
     if (
       event &&
       (event.relativeMs < this.min || event.relativeMs > this.min + this.span)
@@ -125,13 +145,17 @@ export class Timeline {
   position(event) {
     const rectangle = this.canvas.getBoundingClientRect();
     return {
-      x: event.clientX - rectangle.left,
+      x: event.clientX - rectangle.left + this.viewport.scrollLeft,
       y: event.clientY - rectangle.top,
     };
   }
 
   hit(position) {
-    if (position.y < 64) return null;
+    if (
+      position.y < HEADER_HEIGHT ||
+      position.x - this.viewport.scrollLeft < AXIS_WIDTH
+    )
+      return null;
     return this.hits.findLast(
       (hit) =>
         position.x >= hit.x - 3 &&
@@ -154,85 +178,116 @@ export class Timeline {
   }
 
   draw() {
-    const width = Math.max(600, this.canvas.parentElement.clientWidth);
-    const height = this.canvas.clientHeight || 560;
+    const viewportWidth = Math.max(300, this.viewport.clientWidth);
+    const height = this.viewport.clientHeight || 560;
+    const layout = layoutTimeline({
+      events: this.events,
+      tracks: this.tracks,
+      width: viewportWidth,
+      height,
+      min: this.min,
+      span: this.span,
+      sizes: this.options.sizes,
+    });
+    this.layout = layout;
+    this.spacer.style.width = `${layout.width}px`;
+    this.spacer.style.height = `${height}px`;
+    if (this.pendingFocus) {
+      const box = layout.boxes.find(
+        (box) => box.event.id === this.pendingFocus,
+      );
+      if (
+        box &&
+        (box.x < this.viewport.scrollLeft + AXIS_WIDTH ||
+          box.x + box.width > this.viewport.scrollLeft + viewportWidth)
+      ) {
+        this.viewport.scrollLeft = Math.max(0, box.x - AXIS_WIDTH - 12);
+      }
+      this.pendingFocus = null;
+    }
+    const scrollLeft = this.viewport.scrollLeft;
+    const width = layout.width;
     const dpr = window.devicePixelRatio || 1;
-    this.canvas.style.width = `${width}px`;
+    this.canvas.style.width = `${viewportWidth}px`;
+    this.canvas.style.height = `${height}px`;
+    this.canvas.style.left = `${scrollLeft}px`;
     if (
-      this.canvas.width !== Math.round(width * dpr) ||
+      this.canvas.width !== Math.round(viewportWidth * dpr) ||
       this.canvas.height !== Math.round(height * dpr)
     ) {
-      this.canvas.width = Math.round(width * dpr);
+      this.canvas.width = Math.round(viewportWidth * dpr);
       this.canvas.height = Math.round(height * dpr);
     }
     const ctx = this.context;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, width, height);
-    const axis = 85;
-    const top = 64;
-    const plotHeight = height - top - 14;
-    const endpoints = ["client", "server"];
-    if (this.events.some((event) => event.endpoint === "unknown"))
-      endpoints.push("unknown");
-    const endpointWidth = (width - axis - 12) / endpoints.length;
-    const tracks = this.tracks.length
-      ? this.tracks
-      : [{ id: "connection", name: "Connection" }];
-    const laneWidth = endpointWidth / tracks.length;
-    ctx.fillStyle = "#fcfcfe";
-    ctx.fillRect(0, 0, width, top);
-    ctx.strokeStyle = "#e9eaf1";
+    ctx.setTransform(dpr, 0, 0, dpr, -scrollLeft * dpr, 0);
+    ctx.clearRect(scrollLeft, 0, viewportWidth, height);
+    ctx.textBaseline = "alphabetic";
+    ctx.textAlign = "left";
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, top);
-    ctx.lineTo(width, top);
-    ctx.stroke();
+    ctx.fillStyle = "#fcfcfe";
+    ctx.fillRect(0, 0, width, HEADER_HEIGHT);
     ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillStyle = "#9297a6";
-    ctx.fillText("TIME (ms)", 12, 29);
-    endpoints.forEach((endpoint, side) => {
-      const start = axis + endpointWidth * side;
-      ctx.font = "600 11px -apple-system, BlinkMacSystemFont, sans-serif";
-      ctx.fillStyle = "#55576d";
-      ctx.textAlign = "center";
-      ctx.fillText(
-        endpoint === "unknown"
-          ? "Unspecified endpoint"
-          : `${endpoint === "client" ? "Client" : "Server"} endpoint`,
-        start + endpointWidth / 2,
-        26,
-      );
-      tracks.forEach((track, index) => {
-        const middle = start + laneWidth * (index + 0.5);
-        ctx.strokeStyle = "#f0f0f6";
-        ctx.setLineDash([3, 5]);
-        ctx.beginPath();
-        ctx.moveTo(middle, top);
-        ctx.lineTo(middle, height);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = TRACK_COLORS[index % TRACK_COLORS.length];
-        ctx.fillRect(middle - 2, 39, 4, 4);
-        if (laneWidth > 42) {
-          ctx.font = "9px -apple-system, BlinkMacSystemFont, sans-serif";
-          ctx.fillStyle = "#9590a3";
-          const label = track.name.split("/").at(-1);
-          const limit = Math.max(4, Math.floor(laneWidth / 5.5));
-          ctx.fillText(
-            label.length > limit ? `${label.slice(0, limit - 1)}…` : label,
-            middle,
-            56,
-          );
-        }
-      });
+    layout.columns.forEach((column, index) => {
       ctx.strokeStyle = "#e2e3ec";
       ctx.beginPath();
-      ctx.moveTo(start, 0);
-      ctx.lineTo(start, height);
+      ctx.moveTo(column.x, 0);
+      ctx.lineTo(column.x, height);
       ctx.stroke();
+      ctx.fillStyle = TRACK_COLORS[index % TRACK_COLORS.length];
+      ctx.fillRect(column.x + 16, 23, 5, 5);
+      ctx.fillStyle = "#55576d";
+      ctx.font = "600 12px -apple-system, BlinkMacSystemFont, sans-serif";
+      const name =
+        column.id === "connection"
+          ? "Control / Transport"
+          : column.name.split("/").at(-1);
+      ctx.fillText(
+        fitLabel(
+          name,
+          column.width - 48,
+          (text) => ctx.measureText(text).width,
+        ),
+        column.x + 28,
+        30,
+      );
+      ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
+      ctx.fillStyle = "#9290a1";
+      const directions = [
+        ...new Set(column.boxes.map((box) => transferDirection(box.event))),
+      ];
+      const description =
+        column.id === "connection"
+          ? "Control messages and stream events"
+          : directions.length === 1
+            ? directions[0]
+            : "Both transfer directions";
+      ctx.fillText(
+        fitLabel(
+          description,
+          column.width - 32,
+          (text) => ctx.measureText(text).width,
+        ),
+        column.x + 16,
+        49,
+      );
+      for (let slot = 1; slot < column.slots; slot++) {
+        const x = column.x + (column.width * slot) / column.slots;
+        ctx.setLineDash([3, 5]);
+        ctx.strokeStyle = "#f0f0f6";
+        ctx.beginPath();
+        ctx.moveTo(x, HEADER_HEIGHT);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
     });
-    ctx.textAlign = "left";
-    const targetStep = this.span / (plotHeight / 65);
+    ctx.strokeStyle = "#e9eaf1";
+    ctx.beginPath();
+    ctx.moveTo(0, HEADER_HEIGHT);
+    ctx.lineTo(width, HEADER_HEIGHT);
+    ctx.stroke();
+    const targetStep = this.span / (layout.plotHeight / 65);
     const power = 10 ** Math.floor(Math.log10(targetStep));
     const ratio = targetStep / power;
     const step =
@@ -243,102 +298,173 @@ export class Timeline {
       tick < this.min + this.span;
       tick += step
     ) {
-      const y = top + ((tick - this.min) * plotHeight) / this.span;
+      const y =
+        HEADER_HEIGHT + ((tick - this.min) * layout.plotHeight) / this.span;
       ctx.fillStyle = "#9297a4";
-      const label =
-        Math.abs(tick) < step * 1e-5
-          ? "0"
-          : Number(tick.toPrecision(7)).toLocaleString("en-US", {
-              maximumFractionDigits: 6,
-            });
-      ctx.fillText(label, 12, y + 3);
       ctx.strokeStyle = "#f0f1f6";
       ctx.beginPath();
-      ctx.moveTo(axis, y);
+      ctx.moveTo(AXIS_WIDTH, y);
       ctx.lineTo(width, y);
       ctx.stroke();
     }
     this.hits = [];
+    const labels = [];
     ctx.save();
     ctx.beginPath();
-    ctx.rect(axis, top, width - axis, plotHeight + 14);
+    ctx.rect(
+      scrollLeft + AXIS_WIDTH,
+      HEADER_HEIGHT,
+      viewportWidth - AXIS_WIDTH,
+      height - HEADER_HEIGHT,
+    );
     ctx.clip();
-    const captions = new Map();
-    for (const event of this.events) {
-      const y = top + ((event.relativeMs - this.min) * plotHeight) / this.span;
-      if (y < top - 30 || y > height + 30) continue;
-      const side = endpoints.indexOf(event.endpoint);
-      const track = tracks.findIndex((value) => value.id === event.trackKey);
-      if (side < 0 || track < 0) continue;
-      const middle = axis + side * endpointWidth + (track + 0.5) * laneWidth;
-      const barWidth = Math.max(5, Math.min(laneWidth - 10, 105));
-      const barHeight =
-        this.options.sizes && event.bytes
-          ? Math.min(23, 5 + Math.log2(event.bytes + 1))
-          : 7;
-      const x = middle - barWidth / 2;
+    for (const box of layout.boxes) {
+      const event = box.event;
+      if (
+        box.x + box.width < scrollLeft + AXIS_WIDTH ||
+        box.x > scrollLeft + viewportWidth
+      )
+        continue;
       const color = COLORS[event.category];
-      ctx.fillStyle = `${color}24`;
-      ctx.fillRect(x, y - barHeight / 2, barWidth, barHeight);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(box.x, box.y, box.width, box.height);
+      ctx.fillStyle = `${color}25`;
+      ctx.fillRect(box.x, box.y, box.width, box.height);
       ctx.fillStyle = color;
-      ctx.fillRect(x, y - barHeight / 2, 3, barHeight);
+      ctx.fillRect(box.x, box.y, 3, box.height);
+      ctx.strokeStyle = `${color}45`;
+      ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.width - 1, box.height - 1);
       if (event.id === this.selected) {
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(
-          x - 2,
-          y - barHeight / 2 - 2,
-          barWidth + 4,
-          barHeight + 4,
-        );
+        ctx.lineWidth = 2;
+        ctx.strokeRect(box.x, box.y, box.width, box.height);
         ctx.lineWidth = 1;
       }
-      const captionY = y - barHeight / 2 - 3;
-      const captionKey = `${side}:${track}`;
-      if (
-        laneWidth > 85 &&
-        (captionY - (captions.get(captionKey) ?? -Infinity) >= 12 ||
-          event.id === this.selected)
-      ) {
-        const id =
-          event.objectId !== null
-            ? `o${event.objectId}`
-            : event.objectDelta !== null
-              ? `Δ${event.objectDelta}`
-              : null;
-        const rangeEnd =
-          event.data.end_of_timed_out_range ||
-          event.data.end_of_unknown_range ||
-          event.data.end_of_nonexistent_range;
-        const label =
-          event.category === "control" ||
-          rangeEnd ||
-          !this.options.ids ||
-          id === null
-            ? event.label
-            : `${event.groupId === null ? "" : `g${event.groupId}/`}${id}`;
-        ctx.font = "9px -apple-system, BlinkMacSystemFont, sans-serif";
-        ctx.fillStyle = "#68637a";
-        const limit = Math.floor((laneWidth - 18) / 5.2);
-        ctx.fillText(
-          `${directionArrow(event)} ${label.length > limit ? `${label.slice(0, limit - 1)}…` : label}`,
-          x + 5,
-          captionY,
-        );
-        captions.set(captionKey, captionY);
-      }
+      const id =
+        event.objectId !== null
+          ? `o${event.objectId}`
+          : event.objectDelta !== null
+            ? `Δ${event.objectDelta}`
+            : null;
+      const rangeEnd =
+        event.data.end_of_timed_out_range ||
+        event.data.end_of_unknown_range ||
+        event.data.end_of_nonexistent_range;
+      const label =
+        event.category === "control" ||
+        rangeEnd ||
+        !this.options.ids ||
+        id === null
+          ? event.label
+          : `${event.groupId === null ? "" : `g${event.groupId}/`}${id}`;
+      ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";
+      const prefix =
+        event.category === "control" || event.category === "transport"
+          ? event.sender === "client"
+            ? "→ "
+            : event.sender === "server"
+              ? "← "
+              : "? "
+          : "";
+      const text = fitLabel(
+        `${prefix}${label}`,
+        box.width - 2 * TEXT_PADDING,
+        (value) => {
+          const metrics = ctx.measureText(value);
+          return Math.max(
+            metrics.width,
+            (metrics.actualBoundingBoxLeft || 0) +
+              (metrics.actualBoundingBoxRight || 0),
+          );
+        },
+      );
+      const metrics = ctx.measureText(text);
+      const position = labelPosition(box, metrics);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(box.x + 4, box.y + 3, box.width - 8, box.height - 6);
+      ctx.clip();
+      ctx.fillStyle = "#484358";
+      ctx.fillText(text, position.x, position.y);
+      ctx.restore();
+      labels.push({
+        id: event.id,
+        text,
+        box: { x: box.x, y: box.y, width: box.width, height: box.height },
+        bounds: {
+          x: position.x - (metrics.actualBoundingBoxLeft || 0),
+          y: position.top,
+          width:
+            (metrics.actualBoundingBoxLeft || 0) +
+            (metrics.actualBoundingBoxRight || metrics.width),
+          height: position.height,
+        },
+      });
       this.hits.push({
-        x,
-        y: y - barHeight / 2,
-        width: barWidth,
-        height: barHeight,
+        x: box.x,
+        y: box.y,
+        width: box.width,
+        height: box.height,
         event,
       });
     }
     ctx.restore();
+    ctx.fillStyle = "#fcfcfe";
+    ctx.fillRect(scrollLeft, 0, AXIS_WIDTH, HEADER_HEIGHT);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(scrollLeft, HEADER_HEIGHT, AXIS_WIDTH, height - HEADER_HEIGHT);
+    ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillStyle = "#9297a6";
+    ctx.fillText("TIME (ms)", scrollLeft + 12, 29);
+    ctx.font = "10px ui-monospace, SFMono-Regular, monospace";
+    for (
+      let tick = Math.ceil(this.min / step) * step;
+      tick < this.min + this.span;
+      tick += step
+    ) {
+      const y =
+        HEADER_HEIGHT + ((tick - this.min) * layout.plotHeight) / this.span;
+      ctx.fillText(
+        Math.abs(tick) < step * 1e-5
+          ? "0"
+          : Number(tick.toPrecision(7)).toLocaleString("en-US", {
+              maximumFractionDigits: 6,
+            }),
+        scrollLeft + 12,
+        y + 3,
+      );
+    }
+    ctx.strokeStyle = "#e2e3ec";
+    ctx.beginPath();
+    ctx.moveTo(scrollLeft + AXIS_WIDTH, 0);
+    ctx.lineTo(scrollLeft + AXIS_WIDTH, height);
+    ctx.stroke();
+    this.canvas.__mlogRender = {
+      width: layout.width,
+      height,
+      scrollLeft,
+      columns: layout.columns.map(({ id, name, x, width, slots }) => ({
+        id,
+        name,
+        x,
+        width,
+        slots,
+      })),
+      boxes: layout.boxes.map(({ x, y, width, height, event }) => ({
+        id: event.id,
+        track: event.trackKey,
+        x,
+        y,
+        width,
+        height,
+      })),
+      labels,
+    };
     this.canvas.dataset.renderedEvents = String(this.hits.length);
+    this.canvas.dataset.columns = String(layout.columns.length);
     this.canvas.dataset.viewMin = String(this.min);
     this.canvas.dataset.viewSpan = String(this.span);
     this.canvas.dataset.lastRender = formatMs(this.min);
+    this.canvas.dispatchEvent(new CustomEvent("mlog-rendered"));
   }
 }
