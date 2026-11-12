@@ -68,6 +68,11 @@ details panel. Repeated observations from the same endpoint stay separate.
 
 Upload and filter controls sit above the timeline. Event details use a separate
 right column on desktop, and stack above the timeline on narrow screens.
+Control message details show the recorded setup options, parameters, and track
+properties alongside the original logged observations.
+Datagram details show Time, Track, Group, Object, and Payload.
+All event types are displayed; track, trace, and search controls filter the timeline.
+Left/right arrow keys select events, and up/down arrow keys pan the timeline.
 All event boxes have the same height. Selecting REQUEST_OK draws a dotted line
 along the left edges to its original request when that request can be identified
 in the current view.

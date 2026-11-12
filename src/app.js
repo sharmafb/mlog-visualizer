@@ -5,31 +5,20 @@ import {
   rawObservations,
   transferDirection,
 } from "./transfer-events.js";
-import {
-  CATEGORY_NAMES,
-  COLORS,
-  TRACK_COLORS,
-  formatBytes,
-  formatMs,
-  objectLabel,
-} from "./format.js";
+import { TRACK_COLORS, formatBytes, formatMs, objectLabel } from "./format.js";
 
 const byId = (id) => document.getElementById(id);
 const number = (value) => new Intl.NumberFormat("en-US").format(value);
 const worker = new Worker(new URL("./log-worker.js", import.meta.url), {
   type: "module",
 });
-const enabledCategories = new Set(Object.keys(CATEGORY_NAMES));
 let enabledTracks = new Set();
 let parsed = null;
 let allTransfers = [];
-let filtered = [];
 let selected = null;
-let page = 0;
 let requestId = 0;
 let currentFile = null;
 let currentText = "";
-const PAGE_SIZE = 50;
 
 function textElement(tag, text, className) {
   const element = document.createElement(tag);
@@ -59,34 +48,49 @@ function hover(event, position) {
   tooltip.style.top = `${viewport.scrollTop + Math.max(8, Math.min(position.y - viewport.scrollTop + 12, viewport.clientHeight - tooltip.offsetHeight - 10))}px`;
 }
 
-function renderSetupOptions(event) {
-  const section = byId("detail-setup");
-  const fields = byId("detail-setup-options");
-  section.hidden =
-    event.category !== "control" || event.messageType !== "SETUP";
+const PARAMETER_MESSAGES = new Set([
+  "PUBLISH",
+  "REQUEST_OK",
+  "SUBSCRIBE",
+  "SUBSCRIBE_OK",
+  "REQUEST_UPDATE",
+  "PUBLISH_STATE_NOTIFY",
+  "FETCH",
+  "FETCH_OK",
+  "TRACK_STATUS",
+  "PUBLISH_NAMESPACE",
+  "SUBSCRIBE_NAMESPACE",
+  "SUBSCRIBE_TRACKS",
+]);
+const TRACK_PROPERTY_MESSAGES = new Set([
+  "PUBLISH",
+  "REQUEST_OK",
+  "SUBSCRIBE_OK",
+  "FETCH_OK",
+]);
+
+function renderMessageList(
+  sectionId,
+  items,
+  { visible, emptyText, labelKey = "name", fallbackLabel },
+) {
+  const section = byId(sectionId);
+  const fields = section.querySelector("dl");
+  section.hidden = !visible;
   fields.replaceChildren();
   if (section.hidden) return;
-
-  const options = [event, ...event.observations]
-    .map(
-      (observation) =>
-        (observation.data.message || observation.data).setup_options,
-    )
-    .find(Array.isArray);
-  fields.hidden = !Array.isArray(options) || options.length === 0;
-  const empty = byId("detail-setup-empty");
+  fields.hidden = !Array.isArray(items) || items.length === 0;
+  const empty = section.querySelector(".muted");
   empty.hidden = !fields.hidden;
-  empty.textContent = Array.isArray(options)
-    ? "No setup options."
-    : "Setup options were not logged.";
+  empty.textContent = emptyText;
   if (fields.hidden) return;
 
-  for (const option of options) {
+  for (const item of items) {
     const map =
-      option && typeof option === "object" && !Array.isArray(option)
-        ? option
-        : { value: option };
-    const entries = Object.entries(map).filter(([key]) => key !== "name");
+      item && typeof item === "object" && !Array.isArray(item)
+        ? item
+        : { value: item };
+    const entries = Object.entries(map).filter(([key]) => key !== labelKey);
     const value =
       entries.length === 0
         ? "Present"
@@ -94,7 +98,12 @@ function renderSetupOptions(event) {
           ? entries[0][1]
           : Object.fromEntries(entries);
     fields.append(
-      textElement("dt", String(map.name ?? "Unknown option")),
+      textElement(
+        "dt",
+        labelKey === "type" && map.type != null
+          ? `type = ${map.type}`
+          : String(map[labelKey] ?? fallbackLabel),
+      ),
       textElement(
         "dd",
         typeof value === "string" ? value : JSON.stringify(value, null, 2),
@@ -103,53 +112,109 @@ function renderSetupOptions(event) {
   }
 }
 
+function renderMessageLists(event) {
+  const messages = [event, ...event.observations].map(
+    (observation) => observation.data.message || observation.data,
+  );
+  const list = (field) =>
+    messages.map((message) => message[field]).find(Array.isArray);
+  const control = event.category === "control";
+  const setup = list("setup_options");
+  renderMessageList("detail-setup", setup, {
+    visible: control && event.messageType === "SETUP",
+    emptyText: Array.isArray(setup)
+      ? "No setup options."
+      : "Setup options were not logged.",
+    fallbackLabel: "Unknown option",
+  });
+
+  const parameters = list("parameters");
+  const count = messages
+    .map((message) => message.number_of_parameters)
+    .find((value) => value != null);
+  const noParameters = Array.isArray(parameters)
+    ? parameters.length === 0
+    : count === 0 || count === "0";
+  renderMessageList("detail-parameters", parameters, {
+    visible:
+      control &&
+      (PARAMETER_MESSAGES.has(event.messageType) ||
+        Array.isArray(parameters) ||
+        count !== undefined),
+    emptyText: noParameters ? "No parameters." : "Parameters were not logged.",
+    fallbackLabel: "Unknown parameter",
+  });
+
+  const properties = list("track_properties");
+  renderMessageList("detail-track-properties", properties, {
+    visible:
+      control &&
+      (TRACK_PROPERTY_MESSAGES.has(event.messageType) ||
+        Array.isArray(properties)),
+    emptyText: Array.isArray(properties)
+      ? "No track properties."
+      : "Track properties were not logged.",
+    labelKey: "type",
+    fallbackLabel: "Unknown property",
+  });
+}
+
 function select(event) {
   selected = event;
   const inspector = byId("inspector");
   inspector.hidden = !event;
   byId("workspace-layout").classList.toggle("inspecting", !!event);
   timeline.focus(event);
-  renderRows();
   if (!event) return;
   byId("detail-title").textContent = event.label;
   const isControl = event.category === "control";
   const fields = isControl
     ? [["Time", formatMs(event.relativeMs)]]
-    : [
-        ["Event", event.name],
-        ["Time", formatMs(event.relativeMs)],
-        ["Recorded time", formatMs(event.timeMs)],
-        ["Direction", transferDirection(event)],
-        [
-          "Sent at",
-          event.sentTimeMs === null ? null : formatMs(event.sentTimeMs),
-        ],
-        [
-          "Received at",
-          event.receivedTimeMs === null ? null : formatMs(event.receivedTimeMs),
-        ],
-        ["Observations", String(event.observations.length)],
-        [
-          "Traces",
+    : event.category === "object"
+      ? [
+          ["Time", formatMs(event.relativeMs)],
+          ["Track", event.trackName || "Connection"],
+          ["Group", event.groupId ?? "—"],
+          ["Object", event.objectId ?? "—"],
+          ["Payload", formatBytes(event.bytes)],
+        ]
+      : [
+          ["Event", event.name],
+          ["Time", formatMs(event.relativeMs)],
+          ["Recorded time", formatMs(event.timeMs)],
+          ["Direction", transferDirection(event)],
           [
-            ...new Set(
-              event.observations.map(
-                (observation) => observation.traceIndex + 1,
+            "Sent at",
+            event.sentTimeMs === null ? null : formatMs(event.sentTimeMs),
+          ],
+          [
+            "Received at",
+            event.receivedTimeMs === null
+              ? null
+              : formatMs(event.receivedTimeMs),
+          ],
+          ["Observations", String(event.observations.length)],
+          [
+            "Traces",
+            [
+              ...new Set(
+                event.observations.map(
+                  (observation) => observation.traceIndex + 1,
+                ),
               ),
-            ),
-          ].join(", "),
-        ],
-        ["Track", event.trackName || "Connection"],
-        ["Stream", event.streamId],
-        ["Request", event.requestId],
-        ["Track alias", event.alias],
-        ["Group", event.groupId],
-        ["Subgroup", event.subgroupId],
-        ["Object", event.objectId],
-        ["Group delta", event.groupDelta],
-        ["Object delta", event.objectDelta],
-        ["Payload", formatBytes(event.bytes)],
-      ];
+            ].join(", "),
+          ],
+          ["Track", event.trackName || "Connection"],
+          ["Stream", event.streamId],
+          ["Request", event.requestId],
+          ["Track alias", event.alias],
+          ["Group", event.groupId],
+          ["Subgroup", event.subgroupId],
+          ["Object", event.objectId],
+          ["Group delta", event.groupDelta],
+          ["Object delta", event.objectDelta],
+          ["Payload", formatBytes(event.bytes)],
+        ];
   byId("detail-fields").replaceChildren();
   for (const [name, value] of fields) {
     if (value === null) continue;
@@ -158,7 +223,7 @@ function select(event) {
       textElement("dd", value),
     );
   }
-  renderSetupOptions(event);
+  renderMessageLists(event);
   byId("detail-json").textContent = JSON.stringify(
     rawObservations(event),
     null,
@@ -168,34 +233,6 @@ function select(event) {
 }
 
 const timeline = new Timeline(byId("timeline"), { select, hover });
-
-function categoryControls() {
-  byId("category-filters").replaceChildren();
-  for (const [category, label] of Object.entries(CATEGORY_NAMES)) {
-    const row = textElement("label", "", "check-row");
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.checked = enabledCategories.has(category);
-    input.dataset.category = category;
-    input.addEventListener("change", () => {
-      if (input.checked) enabledCategories.add(category);
-      else enabledCategories.delete(category);
-      updateView();
-    });
-    const dot = textElement("span", "", "dot");
-    dot.style.background = COLORS[category];
-    const count = parsed
-      ? allTransfers.filter((event) => event.category === category).length
-      : 0;
-    row.append(
-      input,
-      dot,
-      textElement("span", label),
-      textElement("span", parsed ? number(count) : "", "count"),
-    );
-    byId("category-filters").append(row);
-  }
-}
 
 function trackControls() {
   byId("track-filters").replaceChildren();
@@ -224,85 +261,16 @@ function trackControls() {
   }
 }
 
-function renderRows() {
-  const rows = byId("event-rows");
-  rows.replaceChildren();
-  const start = page * PAGE_SIZE;
-  const visible = filtered.slice(start, start + PAGE_SIZE);
-  for (const event of visible) {
-    const row = document.createElement("tr");
-    row.dataset.eventId = event.id;
-    row.tabIndex = 0;
-    row.setAttribute(
-      "aria-label",
-      `${event.label} at ${formatMs(event.relativeMs)}. Open event details.`,
-    );
-    row.classList.toggle("selected", selected?.id === event.id);
-    row.addEventListener("click", () => select(event));
-    row.addEventListener("keydown", (keyboard) => {
-      if (keyboard.key === "Enter" || keyboard.key === " ") {
-        keyboard.preventDefault();
-        select(event);
-      }
-    });
-    const time = textElement("td", formatMs(event.relativeMs), "time");
-    const endpoint = textElement(
-      "td",
-      transferDirection(event),
-      "endpoint-tag",
-    );
-    const name = document.createElement("td");
-    const inner = textElement("span", "", "event-cell");
-    const dot = textElement("span", "", "dot");
-    dot.style.background = COLORS[event.category];
-    inner.append(dot, textElement("span", event.label));
-    name.append(inner);
-    const track = textElement("td", event.trackName || "Connection");
-    track.title = event.trackName || "Connection";
-    const ids = textElement("td", objectLabel(event));
-    ids.title = objectLabel(event);
-    row.append(
-      time,
-      endpoint,
-      name,
-      track,
-      ids,
-      textElement("td", event.bytes ? formatBytes(event.bytes) : "—"),
-    );
-    rows.append(row);
-  }
-  if (!visible.length) {
-    const row = document.createElement("tr");
-    const cell = textElement(
-      "td",
-      parsed
-        ? "No transfers match these filters."
-        : "Your events will appear here.",
-      "table-empty",
-    );
-    cell.colSpan = 6;
-    row.append(cell);
-    rows.append(row);
-  }
-  byId("page-label").textContent = filtered.length
-    ? `${number(start + 1)}–${number(Math.min(start + PAGE_SIZE, filtered.length))} of ${number(filtered.length)} transfers`
-    : "0 transfers";
-  byId("previous-page").disabled = page === 0;
-  byId("next-page").disabled = (page + 1) * PAGE_SIZE >= filtered.length;
-}
-
 function updateView(fit = false) {
   const search = byId("search").value.trim().toLowerCase();
   const trace = byId("trace-filter").value;
   const observations = (parsed?.events || []).filter(
     (event) =>
-      enabledCategories.has(event.category) &&
       enabledTracks.has(event.trackKey) &&
       (trace === "all" || event.traceIndex === Number(trace)) &&
       (!search || event.search.includes(search)),
   );
-  filtered = mergeTransfers(observations);
-  page = 0;
+  const filtered = mergeTransfers(observations);
   const tracks = (parsed?.tracks || []).filter(
     (track) =>
       enabledTracks.has(track.id) &&
@@ -315,7 +283,6 @@ function updateView(fit = false) {
   byId("empty-state").hidden = !!parsed;
   if (selected && !filtered.some((event) => event.id === selected.id))
     select(null);
-  renderRows();
 }
 
 function receive({ data }) {
@@ -366,7 +333,6 @@ function receive({ data }) {
     ...parsed.warnings.map((message) => textElement("p", message)),
   );
   byId("warnings").hidden = !parsed.warnings.length;
-  categoryControls();
   trackControls();
   select(null);
   updateView(!oldParsed || oldParsed !== parsed);
@@ -471,12 +437,6 @@ byId("search").addEventListener("input", () => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => updateView(), 100);
 });
-byId("all-types").addEventListener("click", () => {
-  for (const category of Object.keys(CATEGORY_NAMES))
-    enabledCategories.add(category);
-  categoryControls();
-  updateView();
-});
 byId("all-tracks").addEventListener("click", () => {
   enabledTracks = new Set((parsed?.tracks || []).map((track) => track.id));
   trackControls();
@@ -486,14 +446,6 @@ byId("fit").addEventListener("click", () => timeline.fit());
 byId("zoom-in").addEventListener("click", () => timeline.zoom(1.5));
 byId("zoom-out").addEventListener("click", () => timeline.zoom(1 / 1.5));
 byId("close-inspector").addEventListener("click", () => select(null));
-byId("previous-page").addEventListener("click", () => {
-  page = Math.max(0, page - 1);
-  renderRows();
-});
-byId("next-page").addEventListener("click", () => {
-  if ((page + 1) * PAGE_SIZE < filtered.length) page++;
-  renderRows();
-});
 byId("copy-event").addEventListener("click", async () => {
   if (!selected) return;
   try {
@@ -505,5 +457,4 @@ byId("copy-event").addEventListener("click", async () => {
     byId("copy-event").textContent = "Select JSON to copy";
   }
 });
-categoryControls();
 timeline.schedule();

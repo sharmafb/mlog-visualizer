@@ -83,13 +83,7 @@
             </select>
           </div>
         </section>
-        <section class="filter-section">
-          <div class="section-heading">
-            <p class="eyebrow">EVENT TYPES</p>
-            <button id="all-types" class="text-button">All</button>
-          </div>
-          <div id="category-filters"></div>
-        </section>
+
         <section class="filter-section">
           <div class="section-heading">
             <p class="eyebrow">TRACKS</p>
@@ -107,6 +101,15 @@
             ><input id="show-ids" type="checkbox" checked /> Show group and
             object IDs</label
           >
+          <label class="search"
+            ><span aria-hidden="true">⌕</span
+            ><input
+              type="search"
+              id="search"
+              placeholder="Search events, tracks, or IDs"
+              aria-label="Search events"
+              data-testid="event-search"
+          /></label>
         </section>
         <p class="sidebar-foot">An open source tool for the MoQ community.</p>
       </aside>
@@ -141,7 +144,7 @@
                 id="timeline"
                 tabindex="0"
                 role="img"
-                aria-label="Event timeline. Use plus and minus to zoom, arrow keys to pan, or Home to fit."
+                aria-label="Event timeline. Left and right select events; up and down pan; plus and minus zoom; Home resets the view."
               ></canvas>
               <div class="empty-state" id="empty-state">
                 <div class="empty-art" aria-hidden="true">
@@ -160,48 +163,6 @@
                 >Scroll vertically · Ctrl/Cmd+scroll to zoom · drag to pan ·
                 click for details</span
               ><span id="visible-count">No events loaded</span>
-            </div>
-          </section>
-          <section class="events-card">
-            <div class="events-heading">
-              <h3>Transfers</h3>
-              <label class="search"
-                ><span aria-hidden="true">⌕</span
-                ><input
-                  type="search"
-                  id="search"
-                  placeholder="Search events, tracks, or IDs"
-                  aria-label="Search events"
-                  data-testid="event-search"
-              /></label>
-            </div>
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Time</th>
-                    <th>Direction</th>
-                    <th>Event</th>
-                    <th>Track</th>
-                    <th>Group / object</th>
-                    <th>Payload</th>
-                  </tr>
-                </thead>
-                <tbody id="event-rows">
-                  <tr>
-                    <td colspan="6" class="table-empty">
-                      Your events will appear here.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="pagination">
-              <span id="page-label">0 events</span>
-              <div>
-                <button id="previous-page" disabled>Previous</button
-                ><button id="next-page" disabled>Next</button>
-              </div>
             </div>
           </section>
           <footer class="workspace-footer">
@@ -235,13 +196,33 @@
           <dl id="detail-fields"></dl>
           <section
             id="detail-setup"
-            class="setup-options"
+            class="message-list"
             aria-label="Setup options"
             hidden
           >
             <h4>Setup options</h4>
             <dl id="detail-setup-options"></dl>
             <p id="detail-setup-empty" class="muted" hidden></p>
+          </section>
+          <section
+            id="detail-parameters"
+            class="message-list"
+            aria-label="Parameters"
+            hidden
+          >
+            <h4>Parameters</h4>
+            <dl id="detail-parameters-list"></dl>
+            <p id="detail-parameters-empty" class="muted" hidden></p>
+          </section>
+          <section
+            id="detail-track-properties"
+            class="message-list"
+            aria-label="Track Properties"
+            hidden
+          >
+            <h4>Track Properties</h4>
+            <dl id="detail-track-properties-list"></dl>
+            <p id="detail-track-properties-empty" class="muted" hidden></p>
           </section>
           <div id="detail-observations">
             <div class="raw-heading">

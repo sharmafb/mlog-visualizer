@@ -98,7 +98,27 @@ export class Timeline {
       if (event.key === "+" || event.key === "=") this.zoom(1.5);
       else if (event.key === "-") this.zoom(1 / 1.5);
       else if (event.key === "Home") this.fit();
-      else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      else if (
+        (event.key === "ArrowLeft" || event.key === "ArrowRight") &&
+        this.events.length
+      ) {
+        const index = this.events.findIndex(
+          (event) => event.id === this.selected,
+        );
+        const next =
+          index < 0
+            ? event.key === "ArrowRight"
+              ? 0
+              : this.events.length - 1
+            : Math.max(
+                0,
+                Math.min(
+                  this.events.length - 1,
+                  index + (event.key === "ArrowRight" ? 1 : -1),
+                ),
+              );
+        this.select(this.events[next]);
+      } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         this.viewport.scrollTop +=
           this.viewport.clientHeight *
           (event.key === "ArrowDown" ? 0.15 : -0.15);
@@ -114,7 +134,7 @@ export class Timeline {
     this.options = options;
     this.canvas.setAttribute(
       "aria-label",
-      `${events.length} events in the timeline. Plus and minus zoom; arrow keys pan; Home fits the view. Events are also listed in the table below.`,
+      `${events.length} events in the timeline. Left and right select events; up and down pan; plus and minus zoom; Home resets the view.`,
     );
     if (fit) this.fit();
     else this.schedule();
