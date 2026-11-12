@@ -113,10 +113,11 @@ function select(event) {
       textElement("dd", value),
     );
   }
-  byId("detail-observations").hidden = isControl;
-  byId("detail-json").textContent = isControl
-    ? ""
-    : JSON.stringify(rawObservations(event), null, 2);
+  byId("detail-json").textContent = JSON.stringify(
+    rawObservations(event),
+    null,
+    2,
+  );
   byId("copy-event").textContent = "Copy JSON";
 }
 
