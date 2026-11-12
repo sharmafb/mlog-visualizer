@@ -151,9 +151,7 @@ function renderMessageLists(event) {
       control &&
       (TRACK_PROPERTY_MESSAGES.has(event.messageType) ||
         Array.isArray(properties)),
-    emptyText: Array.isArray(properties)
-      ? "No track properties."
-      : "Track properties were not logged.",
+    emptyText: "No track properties",
     labelKey: "type",
     fallbackLabel: "Unknown property",
   });
@@ -262,13 +260,11 @@ function trackControls() {
 }
 
 function updateView(fit = false) {
-  const search = byId("search").value.trim().toLowerCase();
   const trace = byId("trace-filter").value;
   const observations = (parsed?.events || []).filter(
     (event) =>
       enabledTracks.has(event.trackKey) &&
-      (trace === "all" || event.traceIndex === Number(trace)) &&
-      (!search || event.search.includes(search)),
+      (trace === "all" || event.traceIndex === Number(trace)),
   );
   const filtered = mergeTransfers(observations);
   const tracks = (parsed?.tracks || []).filter(
@@ -276,7 +272,7 @@ function updateView(fit = false) {
       enabledTracks.has(track.id) &&
       filtered.some((event) => event.trackKey === track.id),
   );
-  timeline.setData(filtered, tracks, { ids: byId("show-ids").checked }, fit);
+  timeline.setData(filtered, tracks, fit);
   byId("visible-count").textContent = parsed
     ? `${number(filtered.length)} transfers · ${number(observations.length)} log records`
     : "No events loaded";
@@ -383,7 +379,6 @@ async function loadFile(file) {
     currentFile = file;
     currentText = text;
     byId("endpoint").value = "";
-    byId("search").value = "";
     parseCurrent();
   } catch (failure) {
     error(`Could not open this file: ${failure.message}`);
@@ -431,12 +426,6 @@ byId("sample-button").addEventListener("click", async () => {
 byId("time-unit").addEventListener("change", parseCurrent);
 byId("endpoint").addEventListener("change", parseCurrent);
 byId("trace-filter").addEventListener("change", () => updateView(true));
-byId("show-ids").addEventListener("change", () => updateView());
-let searchTimer;
-byId("search").addEventListener("input", () => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => updateView(), 100);
-});
 byId("all-tracks").addEventListener("click", () => {
   enabledTracks = new Set((parsed?.tracks || []).map((track) => track.id));
   trackControls();

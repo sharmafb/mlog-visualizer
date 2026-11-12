@@ -24,7 +24,6 @@ export class Timeline {
     this.tracks = [];
     this.hits = [];
     this.selected = null;
-    this.options = { ids: true };
     this.min = 0;
     this.span = 1;
     this.frame = 0;
@@ -128,10 +127,9 @@ export class Timeline {
     });
   }
 
-  setData(events, tracks, options, fit = false) {
+  setData(events, tracks, fit = false) {
     this.events = events;
     this.tracks = tracks;
-    this.options = options;
     this.canvas.setAttribute(
       "aria-label",
       `${events.length} events in the timeline. Left and right select events; up and down pan; plus and minus zoom; Home resets the view.`,
@@ -398,11 +396,9 @@ export class Timeline {
         event.data.end_of_timed_out_range ||
         event.data.end_of_unknown_range ||
         event.data.end_of_nonexistent_range;
-      const label =
-        event.category === "control" ||
-        rangeEnd ||
-        !this.options.ids ||
-        !hasObject
+      const label = event.name.includes("subgroup_header")
+        ? `${event.label}, id = ${event.subgroupId ?? "—"}`
+        : event.category === "control" || rangeEnd || !hasObject
           ? event.label
           : objectLabel(event);
       ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";

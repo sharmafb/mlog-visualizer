@@ -172,7 +172,7 @@ h4 {
 }
 .sidebar {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: start;
   gap: 20px;
   padding: 20px 28px;
@@ -350,9 +350,6 @@ h4 {
 }
 .empty-tracks {
   padding: 7px 0;
-}
-.display-options .eyebrow {
-  margin-bottom: 10px;
 }
 .sidebar-foot {
   grid-column: 1 / -1;
@@ -546,30 +543,6 @@ canvas.dragging {
   box-shadow: 0 6px 24px #201b3422;
   white-space: pre-line;
   overflow-wrap: anywhere;
-}
-.search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f6f7fa;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 7px 10px;
-  width: 100%;
-  margin-top: 12px;
-}
-.search span {
-  font-size: 19px;
-  color: #9297a3;
-}
-.search input {
-  min-width: 0;
-  border: 0;
-  background: transparent;
-  outline: none;
-  font-size: 11px;
-  width: 100%;
-  color: var(--ink);
 }
 .workspace-footer {
   display: flex;
@@ -765,9 +738,6 @@ pre {
   }
   .sidebar-foot {
     display: none;
-  }
-  .display-options {
-    grid-column: 1/-1;
   }
   .workspace-heading {
     align-items: flex-start;
