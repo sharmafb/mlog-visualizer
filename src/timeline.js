@@ -14,11 +14,10 @@ import {
 } from "./timeline-layout.js";
 
 export class Timeline {
-  constructor(canvas, { select, hover }) {
+  constructor(canvas, { select }) {
     this.canvas = canvas;
     this.context = canvas.getContext("2d");
     this.select = select;
-    this.hover = hover;
     this.events = [];
     this.tracks = [];
     this.hits = [];
@@ -84,7 +83,6 @@ export class Timeline {
             this.viewport.scrollLeft += dx;
           else if (event.pointerType !== "touch") window.scrollBy(0, dy);
           canvas.classList.add("dragging");
-          this.hover(null);
           this.schedule();
         }
         return;
@@ -92,7 +90,6 @@ export class Timeline {
       const position = this.position(event);
       const hit = this.hit(position);
       canvas.style.cursor = hit ? "pointer" : "grab";
-      this.hover(hit?.event || null, position);
     });
     canvas.addEventListener("pointerup", (event) => {
       if (!this.drag) return;
@@ -107,7 +104,6 @@ export class Timeline {
       this.drag = null;
       canvas.classList.remove("dragging");
     });
-    canvas.addEventListener("pointerleave", () => this.hover(null));
     canvas.addEventListener("dblclick", () => this.fit());
     canvas.addEventListener("keydown", (event) => {
       if (event.key === "+" || event.key === "=") this.zoom(1.5);

@@ -506,21 +506,6 @@ canvas.dragging {
   top: 106px;
   background: #e0b776;
 }
-.tooltip {
-  position: absolute;
-  pointer-events: none;
-  z-index: 3;
-  padding: 11px 13px;
-  background: #292435;
-  color: white;
-  max-width: 300px;
-  border-radius: 8px;
-  font-size: 11px;
-  line-height: 1.7;
-  box-shadow: 0 6px 24px #201b3422;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
 .workspace-footer {
   display: flex;
   justify-content: space-between;

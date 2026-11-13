@@ -70,6 +70,8 @@ Upload and filter controls sit above the timeline. Event details use a separate
 right column on desktop, and stack above the timeline on narrow screens.
 Control message details show the recorded setup options, parameters, and track
 properties alongside the original logged observations.
+Parameter enums use readable names such as ASCENDING/DESCENDING and TRUE/FALSE;
+timeouts display milliseconds, including inside nested fill parameters.
 Datagram details show Time, Track, Group, Object, and Payload.
 Subgroup header details show Time, Track, Stream ID, Group, and Subgroup, with Logged Observations below.
 Subgroup object details add Object ID to those fields and also retain Logged Observations.

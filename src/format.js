@@ -62,6 +62,64 @@ export function objectLabel(event) {
   const prefix = event.category === "object" ? "[DATAGRAM] " : "";
   return `${prefix}gp = ${group}, ${subgroup}obj = ${object}`;
 }
+
+const TIME_PARAMETERS = new Set([
+  "subgroup_delivery_timeout",
+  "object_delivery_timeout",
+  "fill_timeout",
+  "rendezvous_timeout",
+  "expires",
+]);
+
+export function parameterDisplayValue(name, value) {
+  if (
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.hasOwn(value, "value")
+  ) {
+    return { ...value, value: parameterDisplayValue(name, value.value) };
+  }
+  if (name === "fill_parameters" && Array.isArray(value)) {
+    return value.map((parameter) =>
+      parameter &&
+      typeof parameter === "object" &&
+      Object.hasOwn(parameter, "value")
+        ? {
+            ...parameter,
+            value: parameterDisplayValue(parameter.name, parameter.value),
+          }
+        : parameter,
+    );
+  }
+  const code =
+    typeof value === "number" || typeof value === "string"
+      ? String(value)
+      : null;
+  if (name === "group_order") {
+    if (code === "1") return "ASCENDING";
+    if (code === "2") return "DESCENDING";
+  }
+  if (name === "forward" || name === "include_properties") {
+    if (value === false || code === "0") return "FALSE";
+    if (value === true || code === "1") return "TRUE";
+  }
+  const numeric =
+    (typeof value === "number" && Number.isFinite(value) && value >= 0) ||
+    (typeof value === "string" && /^\d+$/.test(value));
+  if (TIME_PARAMETERS.has(name) && numeric) {
+    if (
+      String(value) === "0" &&
+      (name === "subgroup_delivery_timeout" ||
+        name === "object_delivery_timeout")
+    )
+      return "DISABLED";
+    if (String(value) === "0" && name === "expires")
+      return "NO EXPIRY / UNKNOWN";
+    return `${value} ms`;
+  }
+  return value;
+}
 export function directionArrow(event) {
   if (event.endpoint === "unknown") return "·";
   return (event.endpoint === "client") === (event.direction === "sent")

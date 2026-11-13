@@ -5,7 +5,12 @@ import {
   rawObservations,
   transferDirection,
 } from "./transfer-events.js";
-import { TRACK_COLORS, formatBytes, formatMs, objectLabel } from "./format.js";
+import {
+  TRACK_COLORS,
+  formatBytes,
+  formatMs,
+  parameterDisplayValue,
+} from "./format.js";
 
 const byId = (id) => document.getElementById(id);
 const number = (value) => new Intl.NumberFormat("en-US").format(value);
@@ -35,20 +40,6 @@ function status(text, busy = false) {
 function error(message) {
   byId("error").textContent = message;
   byId("error").hidden = !message;
-}
-
-function hover(event, position) {
-  const tooltip = byId("tooltip");
-  tooltip.hidden = !event;
-  if (!event) return;
-  tooltip.textContent = `${event.label}\n${formatMs(event.relativeMs)} · ${transferDirection(event)}\n${event.trackName || "Connection"}\n${event.observations.length} logged ${event.observations.length === 1 ? "observation" : "observations"}\n${objectLabel(event)}${event.bytes ? `\n${formatBytes(event.bytes)}` : ""}`;
-  const viewport = byId("timeline-viewport");
-  const width = viewport.clientWidth;
-  tooltip.style.left = `${viewport.scrollLeft + Math.max(10, Math.min(position.x - viewport.scrollLeft + 14, width - Math.min(300, tooltip.offsetWidth) - 12))}px`;
-  const render = byId("timeline").__mlogRender;
-  const top = render?.scrollTop || 0;
-  const height = render?.viewportHeight || window.innerHeight;
-  tooltip.style.top = `${Math.max(top + 8, Math.min(position.y + 12, top + height - tooltip.offsetHeight - 10))}px`;
 }
 
 const PARAMETER_MESSAGES = new Set([
@@ -100,6 +91,10 @@ function renderMessageList(
         : entries.length === 1 && entries[0][0] === "value"
           ? entries[0][1]
           : Object.fromEntries(entries);
+    const display =
+      sectionId === "detail-parameters"
+        ? parameterDisplayValue(map.name, value)
+        : value;
     fields.append(
       textElement(
         "dt",
@@ -109,7 +104,9 @@ function renderMessageList(
       ),
       textElement(
         "dd",
-        typeof value === "string" ? value : JSON.stringify(value, null, 2),
+        typeof display === "string"
+          ? display
+          : JSON.stringify(display, null, 2),
       ),
     );
   }
@@ -264,7 +261,7 @@ function select(event) {
   byId("copy-event").textContent = "Copy JSON";
 }
 
-const timeline = new Timeline(byId("timeline"), { select, hover });
+const timeline = new Timeline(byId("timeline"), { select });
 
 function trackControls() {
   byId("track-filters").replaceChildren();
