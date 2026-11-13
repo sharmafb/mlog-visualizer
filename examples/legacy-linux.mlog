@@ -95,6 +95,18 @@
   }
 }
 {
+  "time": "6750000",
+  "vantagePoint": "client",
+  "name": "moqt:control_message_parsed",
+  "data": {
+    "stream_id": 4,
+    "message": {
+      "type": "request_ok",
+      "number_of_parameters": 0
+    }
+  }
+}
+{
   "time": "12345000",
   "vantagePoint": "client",
   "name": "moqt:subgroup_header_parsed",

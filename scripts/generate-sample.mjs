@@ -63,6 +63,10 @@ transfer("client", 6, 0.25, "control_message", {
   stream_id: 1,
   message: { type: "request_ok", number_of_parameters: 0 },
 });
+transfer("server", 6.5, 0.25, "control_message", {
+  stream_id: 4,
+  message: { type: "request_ok", number_of_parameters: 0 },
+});
 transfer("server", 10, 2.345, "subgroup_header", {
   stream_id: 3,
   track_alias: 0,

@@ -406,7 +406,7 @@ test("synthetic contained, sequential and legacy examples agree", async () => {
   const legacy = parseLog(
     await readFile(new URL("legacy-linux.mlog", root), "utf8"),
   );
-  assert.equal(containedResult.events.length, 94);
+  assert.equal(containedResult.events.length, 96);
   assert.equal(
     containedResult.events.filter((value) => value.endpoint === "client")
       .length,

@@ -76,6 +76,26 @@ test("REQUEST_OK without a Request ID connects to the original request on its st
   );
 });
 
+test("both demo publishers have an acknowledgement linked to their own request", async () => {
+  const parsed = parseLog(
+    await readFile(new URL("../examples/demo.mlog", import.meta.url), "utf8"),
+  );
+  const events = mergeTransfers(parsed.events);
+  const publishers = events.filter((event) => event.messageType === "PUBLISH");
+  const replies = events.filter((event) => event.messageType === "REQUEST_OK");
+  assert.equal(publishers.length, 2);
+  assert.equal(replies.length, publishers.length);
+  const requests = replies.map((reply) => findOriginalRequest(reply, events));
+  assert.deepEqual(
+    new Set(requests.map((request) => request.id)),
+    new Set(publishers.map((publisher) => publisher.id)),
+  );
+  for (let i = 0; i < replies.length; i++) {
+    assert.equal(replies[i].streamId, requests[i].streamId);
+    assert.notEqual(replies[i].sender, requests[i].sender);
+  }
+});
+
 test("legacy Request ID zero is scoped to the request initiator", () => {
   const correct = message("server-request", "PUBLISH", { requestId: "0" });
   const other = message("client-request", "PUBLISH", {

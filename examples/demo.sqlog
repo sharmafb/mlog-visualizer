@@ -4,6 +4,7 @@
 {"time":3,"name":"moqt:control_message_parsed","data":{"stream_id":1,"message":{"type":"publish","request_id":1,"track_alias":0,"track_namespace":[{"value":"live"},{"value":"demo"}],"track_name":{"value":"video"},"number_of_parameters":0}}}
 {"time":5,"name":"moqt:control_message_created","data":{"stream_id":4,"message":{"type":"publish","request_id":0,"track_alias":0,"track_namespace":[{"value":"live"},{"value":"demo"}],"track_name":{"value":"audio"},"number_of_parameters":0}}}
 {"time":6,"name":"moqt:control_message_created","data":{"stream_id":1,"message":{"type":"request_ok","number_of_parameters":0}}}
+{"time":6.75,"name":"moqt:control_message_parsed","data":{"stream_id":4,"message":{"type":"request_ok","number_of_parameters":0}}}
 {"time":12.345,"name":"moqt:subgroup_header_parsed","data":{"stream_id":3,"track_alias":0,"group_id":14,"subgroup_id_mode":1,"first_object":true,"contains_end_of_group":true,"properties_present":true}}
 {"time":14,"name":"moqt:object_datagram_created","data":{"track_alias":0,"group_id":14,"object_id":0,"object_payload":{"length":256},"end_of_group":false}}
 {"time":19,"name":"moqt:object_datagram_created","data":{"track_alias":0,"group_id":14,"object_id":1,"object_payload":{"length":256},"end_of_group":false}}

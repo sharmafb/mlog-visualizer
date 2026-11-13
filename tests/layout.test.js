@@ -44,14 +44,14 @@ function assertSeparate(boxes) {
 }
 
 test("send and receive observations occupy one transfer box", () => {
-  assert.equal(source.events.length, 94);
-  assert.equal(transfers.length, 47);
+  assert.equal(source.events.length, 96);
+  assert.equal(transfers.length, 48);
   assert.ok(transfers.every((transfer) => transfer.observations.length === 2));
   const identities = transfers.flatMap((transfer) =>
     transfer.observations.map((event) => event.id),
   );
-  assert.equal(new Set(identities).size, 94);
-  assert.equal(identities.length, 94);
+  assert.equal(new Set(identities).size, 96);
+  assert.equal(identities.length, 96);
 });
 
 test("matching keeps original records and does not mutate them", () => {

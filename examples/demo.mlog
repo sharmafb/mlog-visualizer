@@ -111,6 +111,17 @@
           }
         },
         {
+          "time": 6.75,
+          "name": "moqt:control_message_parsed",
+          "data": {
+            "stream_id": 4,
+            "message": {
+              "type": "request_ok",
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
           "time": 12.345,
           "name": "moqt:subgroup_header_parsed",
           "data": {
@@ -789,6 +800,17 @@
           "name": "moqt:control_message_parsed",
           "data": {
             "stream_id": 1,
+            "message": {
+              "type": "request_ok",
+              "number_of_parameters": 0
+            }
+          }
+        },
+        {
+          "time": 6.5,
+          "name": "moqt:control_message_created",
+          "data": {
+            "stream_id": 4,
             "message": {
               "type": "request_ok",
               "number_of_parameters": 0
