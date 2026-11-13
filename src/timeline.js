@@ -1,11 +1,10 @@
 // Copyright (c) 2026 Aman Sharma. MIT licensed.
 import { COLORS, TRACK_COLORS, formatMs, objectLabel } from "./format.js";
 import { transferDirection } from "./transfer-events.js";
-import { requestConnector } from "./request-links.js";
+import { requestConnectors } from "./request-links.js";
 import {
   AXIS_WIDTH,
   HEADER_HEIGHT,
-  REQUEST_GUTTER,
   TEXT_PADDING,
   fitLabel,
   labelPosition,
@@ -32,41 +31,58 @@ export class Timeline {
     this.spacer = document.getElementById("timeline-spacer");
     this.pendingFocus = null;
     this.pendingZoom = null;
+    this.renderScrollTop = 0;
     this.observer = new ResizeObserver(() => this.schedule());
     this.observer.observe(canvas.parentElement);
     this.viewport.addEventListener("scroll", () => this.schedule());
+    window.addEventListener("scroll", () => this.schedule(), { passive: true });
+    window.addEventListener("resize", () => this.schedule());
     canvas.addEventListener(
       "wheel",
       (event) => {
         if (!this.events.length) return;
-        event.preventDefault();
-        if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.zoom(
+            Math.exp(-Math.max(-100, Math.min(100, event.deltaY)) * 0.004),
+            event.clientY,
+          );
+        } else if (
+          event.shiftKey ||
+          Math.abs(event.deltaX) > Math.abs(event.deltaY)
+        ) {
+          event.preventDefault();
           this.viewport.scrollLeft += event.shiftKey
             ? event.deltaY
             : event.deltaX;
-          return;
         }
-        if (event.ctrlKey || event.metaKey) {
-          this.zoom(
-            Math.exp(-Math.max(-100, Math.min(100, event.deltaY)) * 0.004),
-            this.position(event).y - this.viewport.scrollTop,
-          );
-        } else this.viewport.scrollTop += event.deltaY;
       },
       { passive: false },
     );
     canvas.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
-      this.drag = { y: event.clientY, origin: event.clientY, moved: false };
+      this.drag = {
+        x: event.clientX,
+        y: event.clientY,
+        originX: event.clientX,
+        originY: event.clientY,
+        moved: false,
+      };
       canvas.setPointerCapture(event.pointerId);
     });
     canvas.addEventListener("pointermove", (event) => {
       if (this.drag) {
-        const delta = event.clientY - this.drag.y;
-        this.drag.moved ||= Math.abs(event.clientY - this.drag.origin) > 3;
+        const dx = this.drag.x - event.clientX;
+        const dy = this.drag.y - event.clientY;
+        const totalX = event.clientX - this.drag.originX;
+        const totalY = event.clientY - this.drag.originY;
+        this.drag.moved ||= Math.hypot(totalX, totalY) > 3;
+        this.drag.x = event.clientX;
         this.drag.y = event.clientY;
         if (this.drag.moved) {
-          this.viewport.scrollTop -= delta;
+          if (Math.abs(totalX) > Math.abs(totalY))
+            this.viewport.scrollLeft += dx;
+          else if (event.pointerType !== "touch") window.scrollBy(0, dy);
           canvas.classList.add("dragging");
           this.hover(null);
           this.schedule();
@@ -118,9 +134,10 @@ export class Timeline {
               );
         this.select(this.events[next]);
       } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        this.viewport.scrollTop +=
-          this.viewport.clientHeight *
-          (event.key === "ArrowDown" ? 0.15 : -0.15);
+        window.scrollBy(
+          0,
+          window.innerHeight * (event.key === "ArrowDown" ? 0.15 : -0.15),
+        );
         this.schedule();
       } else return;
       event.preventDefault();
@@ -141,19 +158,22 @@ export class Timeline {
   fit() {
     const first = this.events[0]?.relativeMs || 0;
     const last = this.events.at(-1)?.relativeMs || first;
-    const span = Math.max(last - first, 0.5);
     this.min = first;
-    this.span = span * 1.1;
+    this.span = Math.max(last - first, 0.5) * 1.1;
     this.pendingZoom = null;
-    this.viewport.scrollTop = 0;
+    const plotTop = this.viewport.getBoundingClientRect().top + window.scrollY;
+    if (window.scrollY > plotTop) window.scrollTo(0, plotTop);
     this.viewport.scrollLeft = 0;
     this.schedule();
   }
 
   zoom(factor, y) {
-    const screenY = y ?? (HEADER_HEIGHT + this.viewport.clientHeight) / 2;
+    const rect = this.viewport.getBoundingClientRect();
+    const visibleTop = Math.max(0, rect.top);
+    const visibleBottom = Math.min(window.innerHeight, rect.bottom);
+    const screenY = y ?? (visibleTop + HEADER_HEIGHT + visibleBottom) / 2;
     if (this.layout) {
-      const worldY = screenY + this.viewport.scrollTop;
+      const worldY = screenY - rect.top;
       const time = yToTime(this.layout, worldY);
       this.pendingZoom = {
         time,
@@ -175,13 +195,13 @@ export class Timeline {
     const rectangle = this.canvas.getBoundingClientRect();
     return {
       x: event.clientX - rectangle.left + this.viewport.scrollLeft,
-      y: event.clientY - rectangle.top + this.viewport.scrollTop,
+      y: event.clientY - rectangle.top + this.renderScrollTop,
     };
   }
 
   hit(position) {
     if (
-      position.y - this.viewport.scrollTop < HEADER_HEIGHT ||
+      position.y - this.renderScrollTop < HEADER_HEIGHT ||
       position.x - this.viewport.scrollLeft < AXIS_WIDTH
     )
       return null;
@@ -194,10 +214,6 @@ export class Timeline {
     );
   }
 
-  plotHeight() {
-    return Math.max(1, this.canvas.clientHeight - 78);
-  }
-
   schedule() {
     if (!this.frame)
       this.frame = requestAnimationFrame(() => {
@@ -208,24 +224,30 @@ export class Timeline {
 
   draw() {
     const viewportWidth = Math.max(300, this.viewport.clientWidth);
-    const height = this.viewport.clientHeight || 560;
+    const availableHeight = Math.max(1, window.innerHeight || 560);
     const layout = layoutTimeline({
       events: this.events,
       tracks: this.tracks,
       width: viewportWidth,
-      height,
+      height: availableHeight,
       min: this.min,
       span: this.span,
     });
     this.layout = layout;
     this.spacer.style.width = `${layout.width}px`;
     this.spacer.style.height = `${layout.height}px`;
+    this.viewport.style.height = `${layout.height}px`;
+    const plotTop = this.viewport.getBoundingClientRect().top + window.scrollY;
     if (this.pendingZoom) {
-      this.viewport.scrollTop = Math.max(
+      window.scrollTo(
         0,
-        timeToY(layout, this.pendingZoom.time) +
-          this.pendingZoom.offset -
-          this.pendingZoom.screenY,
+        Math.max(
+          0,
+          plotTop +
+            timeToY(layout, this.pendingZoom.time) +
+            this.pendingZoom.offset -
+            this.pendingZoom.screenY,
+        ),
       );
       this.pendingZoom = null;
     }
@@ -233,10 +255,12 @@ export class Timeline {
       const box = layout.boxes.find(
         (box) => box.event.id === this.pendingFocus,
       );
-      const focusLeft =
-        box?.event.messageType === "REQUEST_OK"
-          ? box.x - REQUEST_GUTTER
-          : box?.x;
+      const links = requestConnectors(layout, this.pendingFocus);
+      const focusLeft = links.length
+        ? Math.min(
+            ...links.flatMap((link) => link.points.map((point) => point.x)),
+          )
+        : box?.x;
       if (
         box &&
         (focusLeft < this.viewport.scrollLeft + AXIS_WIDTH ||
@@ -249,16 +273,31 @@ export class Timeline {
       }
       if (
         box &&
-        (box.y < this.viewport.scrollTop + HEADER_HEIGHT ||
-          box.y + box.height > this.viewport.scrollTop + height)
+        (plotTop + box.y < window.scrollY + HEADER_HEIGHT ||
+          plotTop + box.y + box.height > window.scrollY + availableHeight)
       ) {
-        this.viewport.scrollTop = Math.max(0, box.y - HEADER_HEIGHT - 12);
+        window.scrollTo(0, Math.max(0, plotTop + box.y - HEADER_HEIGHT - 12));
+      }
+      const inspector = document.getElementById("inspector");
+      if (box && inspector && !inspector.hidden) {
+        const workspaceTop =
+          inspector.parentElement.getBoundingClientRect().top + window.scrollY;
+        if (window.innerWidth > 900) {
+          inspector.style.marginTop = `${Math.max(0, window.scrollY + 20 - workspaceTop)}px`;
+        } else {
+          window.scrollTo(0, workspaceTop);
+        }
       }
       this.pendingFocus = null;
     }
+    const rect = this.viewport.getBoundingClientRect();
     const scrollLeft = this.viewport.scrollLeft;
-    const scrollTop = this.viewport.scrollTop;
-    const width = layout.width;
+    const scrollTop = Math.max(0, Math.min(layout.height - 1, -rect.top));
+    const height = Math.max(
+      1,
+      Math.min(availableHeight, layout.height - scrollTop),
+    );
+    this.renderScrollTop = scrollTop;
     const dpr = window.devicePixelRatio || 1;
     this.canvas.style.width = `${viewportWidth}px`;
     this.canvas.style.height = `${height}px`;
@@ -349,11 +388,11 @@ export class Timeline {
       scrollLeft + AXIS_WIDTH,
       scrollTop + HEADER_HEIGHT,
       viewportWidth - AXIS_WIDTH,
-      height - HEADER_HEIGHT,
+      Math.max(0, height - HEADER_HEIGHT),
     );
     ctx.clip();
-    const connector = requestConnector(layout, this.selected);
-    if (connector) {
+    const connectors = requestConnectors(layout, this.selected);
+    for (const connector of connectors) {
       ctx.save();
       ctx.strokeStyle = COLORS.control;
       ctx.lineWidth = 1.5;
@@ -385,7 +424,10 @@ export class Timeline {
       ctx.fillRect(box.x, box.y, 3, box.height);
       ctx.strokeStyle = `${color}45`;
       ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.width - 1, box.height - 1);
-      if (event.id === this.selected || event.id === connector?.to) {
+      if (
+        event.id === this.selected ||
+        connectors.some((connector) => connector.to === event.id)
+      ) {
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         ctx.strokeRect(box.x + 1, box.y + 1, box.width - 2, box.height - 2);
@@ -460,7 +502,7 @@ export class Timeline {
       scrollLeft,
       scrollTop + HEADER_HEIGHT,
       AXIS_WIDTH,
-      height - HEADER_HEIGHT,
+      Math.max(0, height - HEADER_HEIGHT),
     );
     ctx.font = "10px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.fillStyle = "#9297a6";
@@ -505,7 +547,7 @@ export class Timeline {
         height,
       })),
       labels,
-      connections: connector ? [connector] : [],
+      connections: connectors,
     };
     this.canvas.dataset.renderedEvents = String(this.hits.length);
     this.canvas.dataset.columns = String(layout.columns.length);

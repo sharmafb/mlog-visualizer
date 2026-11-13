@@ -5,7 +5,11 @@ import { readFile } from "node:fs/promises";
 import { parseLog } from "../src/log-parser.js";
 import { mergeTransfers } from "../src/transfer-events.js";
 import { layoutTimeline } from "../src/timeline-layout.js";
-import { findOriginalRequest, requestConnector } from "../src/request-links.js";
+import {
+  findOriginalRequest,
+  requestConnector,
+  requestConnectors,
+} from "../src/request-links.js";
 
 function message(id, type, fields = {}) {
   return {
@@ -69,7 +73,9 @@ test("REQUEST_OK without a Request ID connects to the original request on its st
   assert.ok(connector.points[1].x < Math.min(from.x, to.x));
   assert.equal(connector.points[1].x, connector.points[2].x);
   assert.ok(connector.dash.length > 0);
-  assert.equal(requestConnector(layout, request.id), null);
+  const reverse = requestConnector(layout, request.id);
+  assert.equal(reverse.from, request.id);
+  assert.equal(reverse.to, response.id);
   assert.equal(
     requestConnector({ ...layout, boxes: [from] }, response.id),
     null,
@@ -93,6 +99,65 @@ test("both demo publishers have an acknowledgement linked to their own request",
   for (let i = 0; i < replies.length; i++) {
     assert.equal(replies[i].streamId, requests[i].streamId);
     assert.notEqual(replies[i].sender, requests[i].sender);
+  }
+});
+
+test("request selection links both acknowledgements and errors from the left edges", () => {
+  const request = message("request", "PUBLISH");
+  const ok = reply();
+  const error = message("error", "REQUEST_ERROR", {
+    sender: "client",
+    direction: "sent",
+    timeMs: 3,
+    relativeMs: 3,
+  });
+  const unrelated = message("unrelated", "REQUEST_ERROR", {
+    sender: "client",
+    direction: "sent",
+    traceIndex: 1,
+    timeMs: 4,
+    relativeMs: 4,
+  });
+  const events = [request, ok, error, unrelated];
+  const layout = layoutTimeline({
+    events,
+    tracks: [{ id: "connection", name: "Connection" }],
+    width: 600,
+    height: 560,
+    min: 0,
+    span: 10,
+  });
+  const links = requestConnectors(layout, request.id);
+  assert.deepEqual(
+    links.map((link) => link.to),
+    [ok.id, error.id],
+  );
+  assert.equal(requestConnector(layout, error.id).to, request.id);
+  for (const link of links) {
+    assert.equal(link.from, request.id);
+    assert.ok(
+      link.points[1].x < Math.min(link.points[0].x, link.points.at(-1).x),
+    );
+  }
+});
+
+test("subscribe and fetch successes link in both directions", () => {
+  for (const [requestType, responseType] of [
+    ["SUBSCRIBE", "SUBSCRIBE_OK"],
+    ["FETCH", "FETCH_OK"],
+  ]) {
+    const request = message("request", requestType);
+    const response = { ...reply(), messageType: responseType };
+    const layout = layoutTimeline({
+      events: [request, response],
+      tracks: [{ id: "connection", name: "Connection" }],
+      width: 600,
+      height: 560,
+      min: 0,
+      span: 10,
+    });
+    assert.equal(requestConnector(layout, request.id).to, response.id);
+    assert.equal(requestConnector(layout, response.id).to, request.id);
   }
 });
 

@@ -71,12 +71,17 @@ right column on desktop, and stack above the timeline on narrow screens.
 Control message details show the recorded setup options, parameters, and track
 properties alongside the original logged observations.
 Datagram details show Time, Track, Group, Object, and Payload.
+Subgroup header details show Time, Track, Stream ID, Group, and Subgroup, with Logged Observations below.
+Subgroup object details add Object ID to those fields and also retain Logged Observations.
+FETCH objects use the same compact fields; FETCH headers show Time, Track, Stream ID, and Request ID.
+PUBLISH, SUBSCRIBE, and FETCH details include Track.
 Box labels use `gp`, `subgp`, and `obj` for their IDs; object datagrams are marked `[DATAGRAM]`.
 All event types and group/object IDs are displayed; track and trace controls filter the timeline.
 Left/right arrow keys select events, and up/down arrow keys pan the timeline.
-All event boxes have the same height. Selecting REQUEST_OK draws a dotted line
-along the left edges to its original request when that request can be identified
-in the current view.
+All event boxes have the same height. Selecting a request or its reply draws
+dotted connections along their left edges, including acknowledgements and errors.
+The page provides vertical scrolling; the canvas renders only the visible area.
+Horizontal dragging or Shift+scroll pans across tracks on narrow screens.
 
 Labels are measured and clipped inside their boxes. Every track is a single
 vertical stack with fixed box positions. A tall timeline follows the earlier

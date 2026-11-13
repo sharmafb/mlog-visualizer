@@ -45,7 +45,10 @@ function hover(event, position) {
   const viewport = byId("timeline-viewport");
   const width = viewport.clientWidth;
   tooltip.style.left = `${viewport.scrollLeft + Math.max(10, Math.min(position.x - viewport.scrollLeft + 14, width - Math.min(300, tooltip.offsetWidth) - 12))}px`;
-  tooltip.style.top = `${viewport.scrollTop + Math.max(8, Math.min(position.y - viewport.scrollTop + 12, viewport.clientHeight - tooltip.offsetHeight - 10))}px`;
+  const render = byId("timeline").__mlogRender;
+  const top = render?.scrollTop || 0;
+  const height = render?.viewportHeight || window.innerHeight;
+  tooltip.style.top = `${Math.max(top + 8, Math.min(position.y + 12, top + height - tooltip.offsetHeight - 10))}px`;
 }
 
 const PARAMETER_MESSAGES = new Set([
@@ -161,13 +164,19 @@ function select(event) {
   selected = event;
   const inspector = byId("inspector");
   inspector.hidden = !event;
+  inspector.style.marginTop = "0px";
   byId("workspace-layout").classList.toggle("inspecting", !!event);
   timeline.focus(event);
   if (!event) return;
   byId("detail-title").textContent = event.label;
   const isControl = event.category === "control";
   const fields = isControl
-    ? [["Time", formatMs(event.relativeMs)]]
+    ? [
+        ["Time", formatMs(event.relativeMs)],
+        ...(["PUBLISH", "FETCH", "SUBSCRIBE"].includes(event.messageType)
+          ? [["Track", event.trackName || "Connection"]]
+          : []),
+      ]
     : event.category === "object"
       ? [
           ["Time", formatMs(event.relativeMs)],
@@ -176,43 +185,68 @@ function select(event) {
           ["Object", event.objectId ?? "—"],
           ["Payload", formatBytes(event.bytes)],
         ]
-      : [
-          ["Event", event.name],
-          ["Time", formatMs(event.relativeMs)],
-          ["Recorded time", formatMs(event.timeMs)],
-          ["Direction", transferDirection(event)],
-          [
-            "Sent at",
-            event.sentTimeMs === null ? null : formatMs(event.sentTimeMs),
-          ],
-          [
-            "Received at",
-            event.receivedTimeMs === null
-              ? null
-              : formatMs(event.receivedTimeMs),
-          ],
-          ["Observations", String(event.observations.length)],
-          [
-            "Traces",
-            [
-              ...new Set(
-                event.observations.map(
-                  (observation) => observation.traceIndex + 1,
-                ),
-              ),
-            ].join(", "),
-          ],
-          ["Track", event.trackName || "Connection"],
-          ["Stream", event.streamId],
-          ["Request", event.requestId],
-          ["Track alias", event.alias],
-          ["Group", event.groupId],
-          ["Subgroup", event.subgroupId],
-          ["Object", event.objectId],
-          ["Group delta", event.groupDelta],
-          ["Object delta", event.objectDelta],
-          ["Payload", formatBytes(event.bytes)],
-        ];
+      : event.name.includes("subgroup_header")
+        ? [
+            ["Time", formatMs(event.relativeMs)],
+            ["Track", event.trackName || "Connection"],
+            ["Stream ID", event.streamId ?? "—"],
+            ["Group", event.groupId ?? "—"],
+            ["Subgroup", event.subgroupId ?? "—"],
+          ]
+        : event.name.includes("subgroup_object") ||
+            event.name.includes("fetch_object")
+          ? [
+              ["Time", formatMs(event.relativeMs)],
+              ["Track", event.trackName || "Connection"],
+              ["Stream ID", event.streamId ?? "—"],
+              ["Group", event.groupId ?? "—"],
+              ["Subgroup", event.subgroupId ?? "—"],
+              ["Object ID", event.objectId ?? "—"],
+            ]
+          : event.name.includes("fetch_header")
+            ? [
+                ["Time", formatMs(event.relativeMs)],
+                ["Track", event.trackName || "Connection"],
+                ["Stream ID", event.streamId ?? "—"],
+                ["Request ID", event.requestId ?? "—"],
+              ]
+            : [
+                ["Event", event.name],
+                ["Time", formatMs(event.relativeMs)],
+                ["Recorded time", formatMs(event.timeMs)],
+                ["Direction", transferDirection(event)],
+                [
+                  "Sent at",
+                  event.sentTimeMs === null ? null : formatMs(event.sentTimeMs),
+                ],
+                [
+                  "Received at",
+                  event.receivedTimeMs === null
+                    ? null
+                    : formatMs(event.receivedTimeMs),
+                ],
+                ["Observations", String(event.observations.length)],
+                [
+                  "Traces",
+                  [
+                    ...new Set(
+                      event.observations.map(
+                        (observation) => observation.traceIndex + 1,
+                      ),
+                    ),
+                  ].join(", "),
+                ],
+                ["Track", event.trackName || "Connection"],
+                ["Stream", event.streamId],
+                ["Request", event.requestId],
+                ["Track alias", event.alias],
+                ["Group", event.groupId],
+                ["Subgroup", event.subgroupId],
+                ["Object", event.objectId],
+                ["Group delta", event.groupDelta],
+                ["Object delta", event.objectDelta],
+                ["Payload", formatBytes(event.bytes)],
+              ];
   byId("detail-fields").replaceChildren();
   for (const [name, value] of fields) {
     if (value === null) continue;

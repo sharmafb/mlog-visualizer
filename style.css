@@ -28,6 +28,7 @@
 }
 body {
   margin: 0;
+  overflow-x: clip;
 }
 button,
 input,
@@ -152,13 +153,6 @@ h4 {
   border-radius: 10px;
   line-height: 1;
 }
-.community-label {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: #a1a6b2;
-  padding-left: 30px;
-  border-left: 1px solid var(--line);
-}
 .source-link {
   margin-left: auto;
   font-size: 12px;
@@ -181,10 +175,6 @@ h4 {
 }
 .sidebar > section {
   min-width: 0;
-}
-#track-filters {
-  max-height: 180px;
-  overflow: auto;
 }
 .workspace-layout {
   display: grid;
@@ -216,11 +206,8 @@ h4 {
 .upload-symbol {
   display: none;
 }
-.dropzone p {
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.5;
-  margin: 6px 0 12px;
+.dropzone h1 {
+  margin-bottom: 14px;
 }
 .button {
   display: inline-flex;
@@ -250,13 +237,6 @@ h4 {
   height: 100%;
   opacity: 0;
   cursor: pointer;
-}
-.file-types {
-  display: block;
-  font-size: 10px;
-  line-height: 1.6;
-  color: #9690a7;
-  margin-top: 14px;
 }
 .privacy-note {
   font-size: 10px;
@@ -381,17 +361,15 @@ main {
   min-width: 0;
 }
 .status {
-  font-size: 11px;
-  color: var(--muted);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
-  background: white;
-  border: 1px solid var(--line);
-  padding: 7px 11px;
-  border-radius: 20px;
-}
-.status.busy {
-  color: var(--purple);
-  background: #f1ebfc;
+  border: 0;
 }
 .timeline-card {
   background: white;
@@ -428,8 +406,8 @@ main {
 }
 .timeline-viewport {
   position: relative;
-  overflow: auto;
-  height: 560px;
+  overflow: hidden;
+  overflow-anchor: none;
   min-width: 0;
   background: #fff;
 }
@@ -439,9 +417,8 @@ canvas {
   left: 0;
   display: block;
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y;
   width: 100%;
-  height: 560px;
   min-width: 0;
 }
 canvas.dragging {
@@ -574,15 +551,13 @@ canvas.dragging {
   color: #897039;
 }
 .inspector {
-  position: sticky;
-  top: 20px;
-  max-height: calc(100vh - 40px);
+  position: static;
   min-width: 0;
   background: white;
   border: 1px solid var(--line);
   border-radius: 12px;
   z-index: 8;
-  overflow: auto;
+  overflow: visible;
   padding: 22px;
 }
 .inspector-heading {
@@ -652,16 +627,10 @@ pre {
   border: 1px solid var(--line);
   border-radius: 7px;
   padding: 14px;
-  overflow: auto;
+  overflow: visible;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   color: #666276;
-}
-@media (min-width: 1500px) {
-  .timeline-viewport,
-  canvas {
-    height: 650px;
-  }
 }
 @media (max-width: 1050px) {
   .sidebar {
@@ -676,9 +645,6 @@ pre {
   }
   .masthead {
     padding: 0 22px;
-  }
-  .community-label {
-    display: none;
   }
   .workspace-heading h2 {
     font-size: 21px;
@@ -697,7 +663,6 @@ pre {
   .inspector {
     position: static;
     grid-row: 1;
-    max-height: 420px;
   }
 }
 @media (max-width: 740px) {
@@ -727,9 +692,6 @@ pre {
   .dropzone {
     padding: 17px;
   }
-  .dropzone p {
-    max-width: none;
-  }
   .workspace-layout {
     padding: 20px 16px;
   }
@@ -744,10 +706,6 @@ pre {
   }
   .workspace-heading h2 {
     font-size: 20px;
-  }
-  .status {
-    font-size: 9px;
-    padding: 6px 8px;
   }
   .timeline-toolbar {
     padding: 16px;

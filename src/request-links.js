@@ -10,6 +10,12 @@ const REQUEST_TYPES = new Set([
   "SUBSCRIBE_NAMESPACE",
   "SUBSCRIBE_TRACKS",
 ]);
+const RESPONSE_TYPES = new Set([
+  "REQUEST_OK",
+  "REQUEST_ERROR",
+  "SUBSCRIBE_OK",
+  "FETCH_OK",
+]);
 const present = (value) => value !== null && value !== undefined;
 const observations = (event) => event.observations || [event];
 
@@ -36,7 +42,10 @@ function matches(request, response) {
 }
 
 export function findOriginalRequest(response, events) {
-  if (response?.category !== "control" || response.messageType !== "REQUEST_OK")
+  if (
+    response?.category !== "control" ||
+    !RESPONSE_TYPES.has(response.messageType)
+  )
     return null;
   const candidates = events.filter(
     (event) =>
@@ -49,35 +58,52 @@ export function findOriginalRequest(response, events) {
   return candidates.length === 1 ? candidates[0] : null;
 }
 
-export function requestConnector(layout, selectedId) {
-  if (!selectedId) return null;
-  const response = layout.boxes.find((box) => box.event.id === selectedId);
-  if (
-    response?.event.category !== "control" ||
-    response.event.messageType !== "REQUEST_OK"
-  )
-    return null;
-  const request = findOriginalRequest(
-    response.event,
-    layout.boxes.map((box) => box.event),
-  );
-  if (!request) return null;
-  const original = layout.boxes.find((box) => box.event.id === request.id);
+function connector(from, to) {
   const left = Math.max(
     AXIS_WIDTH + 4,
-    Math.min(response.x, original.x) - REQUEST_GUTTER,
+    Math.min(from.x, to.x) - REQUEST_GUTTER,
   );
-  const responseY = response.y + response.height / 2;
-  const requestY = original.y + original.height / 2;
+  const fromY = from.y + from.height / 2;
+  const toY = to.y + to.height / 2;
   return {
-    from: response.event.id,
-    to: original.event.id,
+    from: from.event.id,
+    to: to.event.id,
     points: [
-      { x: response.x, y: responseY },
-      { x: left, y: responseY },
-      { x: left, y: requestY },
-      { x: original.x, y: requestY },
+      { x: from.x, y: fromY },
+      { x: left, y: fromY },
+      { x: left, y: toY },
+      { x: to.x, y: toY },
     ],
     dash: [1, 4],
   };
+}
+
+export function requestConnectors(layout, selectedId) {
+  if (!selectedId) return [];
+  const selected = layout.boxes.find((box) => box.event.id === selectedId);
+  if (selected?.event.category !== "control") return [];
+  const events = layout.boxes.map((box) => box.event);
+  if (RESPONSE_TYPES.has(selected.event.messageType)) {
+    const request = findOriginalRequest(selected.event, events);
+    const original =
+      request && layout.boxes.find((box) => box.event.id === request.id);
+    return original ? [connector(selected, original)] : [];
+  }
+  if (!REQUEST_TYPES.has(selected.event.messageType)) return [];
+  return layout.boxes
+    .filter(
+      (box) =>
+        RESPONSE_TYPES.has(box.event.messageType) &&
+        observations(selected.event).some((request) =>
+          observations(box.event).some((response) =>
+            matches(request, response),
+          ),
+        ) &&
+        findOriginalRequest(box.event, events)?.id === selectedId,
+    )
+    .map((box) => connector(selected, box));
+}
+
+export function requestConnector(layout, selectedId) {
+  return requestConnectors(layout, selectedId)[0] || null;
 }

@@ -37,10 +37,7 @@
     failures.push("Duplicate track column");
   if (canvas.width > (canvas.parentElement.clientWidth + 1) * devicePixelRatio)
     failures.push("Canvas is not virtualized");
-  if (
-    canvas.height >
-    (canvas.parentElement.clientHeight + 1) * devicePixelRatio
-  )
+  if (canvas.height > (innerHeight + 1) * devicePixelRatio)
     failures.push("Canvas height is not virtualized");
   if (failures.length) throw new Error(failures.join("\n"));
   return {
